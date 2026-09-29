@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Module · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="learn" data-staff-title="Module" data-staff-back="learn.html">
+  <main class="staff-main">
+    <div id="module"></div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF;
+    const m = { ...(S.moduleById(UI.param('id')) || S.learning[0]) };
+    m.lessons = m.lessons.map(l=>({...l}));
+
+    const catCol = {
+      'Food safety':['#2C7358','#E7F3EE'], 'Allergens':['#8A6412','#FBF1DC'],
+      'Fire safety':['#8F3527','#F8E7E2'], 'Data & security':['#155E88','#E4F2FB'],
+      'Health & safety':['#5A6675','#EEF2F6']
+    };
+    const [c,bg] = catCol[m.category]||['#5A6675','#EEF2F6'];
+
+    function progress(){ return Math.round(m.lessons.filter(l=>l.done).length / m.lessons.length * 100); }
+    function nextIdx(){ return m.lessons.findIndex(l=>!l.done); }
+
+    function render(){
+      const p = progress(), done = p===100;
+      const ni = nextIdx();
+      document.getElementById('module').innerHTML = `
+        <div class="flex items-start gap-3 mb-4">
+          <span class="w-12 h-12 rounded-xl grid place-items-center flex-none" style="background:${bg};color:${c}">${UI.icon('learn','w-6 h-6')}</span>
+          <div><div class="text-xs text-grey-500">${m.category} · ${m.minutes} min</div>
+            <h1 class="font-display text-xl font-semibold text-ink leading-snug">${m.title}</h1></div>
+        </div>
+
+        <p class="text-[15px] text-grey-600 leading-relaxed mb-4">${m.about}</p>
+
+        <div class="card p-4 mb-4">
+          <div class="flex items-center justify-between mb-2"><span class="text-sm font-semibold">Your progress</span>
+            <span class="text-sm text-grey-500 tnum">${p}%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div>
+        </div>
+
+        <div class="card p-4 mb-5">
+          <div class="text-sm font-semibold mb-1">Lessons</div>
+          ${m.lessons.map((l,i)=>`<div class="lesson-row ${l.done?'done':''}">
+            <span class="lesson-num">${l.done?UI.icon('check','w-4 h-4'):i+1}</span>
+            <span class="flex-1 text-[15px] ${l.done?'text-grey-400':'text-ink'}">${l.t}</span>
+            ${i===ni?'<span class="pill st-info !py-0.5">Next</span>':''}
+          </div>`).join('')}
+        </div>
+
+        ${done
+          ? `<div class="card p-5 text-center mb-4" style="background:#E7F3EE;border-color:#CDE7DD">
+               <span class="w-12 h-12 rounded-full bg-white grid place-items-center mx-auto mb-2 text-ok">${UI.icon('award','w-6 h-6')}</span>
+               <div class="font-display font-semibold text-ink">Module complete</div>
+               <div class="text-sm text-grey-600 mb-3">Your certificate has been added to your profile.</div>
+               <a href="profile.html" class="btn btn-ghost btn-sm">View certificate</a></div>`
+          : `<button class="btn btn-primary big-btn w-full tap" id="cont">${UI.icon('play')}${p>0?'Continue':'Start module'} — ${m.lessons[ni]?m.lessons[ni].t:''}</button>`}
+      `;
+      if(!done){
+        document.getElementById('cont').onclick = ()=>{
+          const i = nextIdx(); if(i>-1){ m.lessons[i].done = true; }
+          if(progress()===100){ UI.toast('Module complete — certificate earned'); m.cert=true; m.status='completed'; }
+          else UI.toast('Lesson complete');
+          render();
+        };
+      }
+    }
+    render();
+  </script>
+</body>
+</html>

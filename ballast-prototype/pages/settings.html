@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Settings · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="settings">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Corporate &amp; Site Configuration</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-slate-600 font-medium">Workspace Engine</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Workspace Settings</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Manage your registered legal entity, operating sites, employee allocations, and operational activities. Changes dynamically re-evaluate the statutory obligation engine.
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm" onclick="rerunAssessment()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          Re-run Engine
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="saveAllSettings()">
+          Save Configurations
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs header -->
+    <div class="flex gap-1.5 mb-6 border-b hairline" id="tabs"></div>
+
+    <!-- Tab 1: Business Profile & Activities -->
+    <div id="tab-profile" class="tabpane">
+      <div class="grid lg:grid-cols-2 gap-5">
+        <!-- Identity Card -->
+        <div class="card p-6">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b hairline">
+            <div>
+              <div class="font-display font-semibold text-ink">Company &amp; registration</div>
+              <div class="text-xs text-grey-500">Official legal entity details and statutory jurisdiction</div>
+            </div>
+            <span class="pill st-ok text-xs">Verified</span>
+          </div>
+
+          <div class="space-y-4" id="profileForm"></div>
+        </div>
+
+        <!-- Activities & Triggers Card -->
+        <div class="card p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4 pb-2 border-b hairline">
+              <div>
+                <div class="font-display font-semibold text-ink">Activities &amp; regulatory triggers</div>
+                <div class="text-xs text-grey-500">Each active operation automatically switches on relevant legal rules</div>
+              </div>
+              <span class="pill st-info text-xs" id="actCountBadge">0 active</span>
+            </div>
+
+            <p class="text-sm text-grey-600 mb-4 leading-relaxed">
+              When you add or remove activities (such as alcohol sales, gas appliances, or outdoor seating), Ballast updates your duty register to prevent regulatory drift.
+            </p>
+
+            <div class="flex flex-wrap gap-2 mb-6" id="acts"></div>
+
+            <!-- Custom activity adder -->
+            <div class="p-4 rounded-xl border border-dashed border-grey-300 bg-grey-50 mb-4">
+              <div class="text-sm font-semibold text-ink mb-1 flex items-center gap-1.5">
+                ${UI.icon('plus', 'w-4 h-4 text-brand-600')} Add more activities or custom operations
+              </div>
+              <p class="text-xs text-grey-500 mb-3">Add any operational activity or licensing trigger to factor into your compliance obligations.</p>
+              <div class="space-y-2">
+                <input class="field text-sm" id="newActTitle" placeholder="Activity name (e.g. Outdoor pavement seating, Live music, LPG storage)">
+                <div class="flex gap-2">
+                  <input class="field text-sm flex-1" id="newActDesc" placeholder="Description or regulatory notes (optional)">
+                  <button type="button" class="btn btn-ghost btn-sm whitespace-nowrap" onclick="addCustomActivity()">Add activity</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t hairline flex items-center justify-between">
+            <span class="text-xs text-grey-500">Last assessed: Today</span>
+            <button class="btn btn-ghost btn-sm text-xs" onclick="rerunAssessment()">Re-evaluate triggers</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Sites & Premises -->
+    <div id="tab-sites" class="tabpane hidden">
+      <div class="card overflow-hidden">
+        <div class="p-5 flex flex-wrap items-center justify-between gap-4 border-b hairline bg-white">
+          <div>
+            <div class="font-display font-semibold text-ink text-base">Operating sites &amp; premises</div>
+            <div class="text-xs text-grey-500 mt-0.5">Premises specifics dictate food hygiene ratings, fire risk assessments, and council licences.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openSiteModal()">
+            ${UI.icon('plus', 'w-4 h-4')} Add new site
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="dtable">
+            <thead>
+              <tr>
+                <th>Site name / venue</th>
+                <th>Location &amp; postcode</th>
+                <th>Staff count</th>
+                <th>Description &amp; facilities</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="siteRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Users & Roles -->
+    <div id="tab-users" class="tabpane hidden">
+      <div class="card overflow-hidden">
+        <div class="p-5 flex flex-wrap items-center justify-between gap-4 border-b hairline bg-white">
+          <div>
+            <div class="font-display font-semibold text-ink text-base">Team members &amp; roles</div>
+            <div class="text-xs text-grey-500 mt-0.5">Control role-based permissions across sites and compliance tasks.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openUserModal()">
+            ${UI.icon('plus', 'w-4 h-4')} Invite team member
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="dtable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Site assignments</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Site Modal (Add / Edit) -->
+  <div class="overlay" id="siteModal">
+    <div class="modal">
+      <div class="flex items-center justify-between px-6 py-4 border-b hairline">
+        <h3 class="font-display font-semibold text-ink text-lg" id="siteModalTitle">Add site</h3>
+        <button class="modal-close" onclick="closeSiteModal()">&times;</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <input type="hidden" id="siteEditId" value="">
+        <div>
+          <label class="label">Site name / venue label</label>
+          <input class="field" id="m-site-name" placeholder="e.g. Northern Quarter café &amp; roastery">
+        </div>
+        <div class="grid sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="label">Street location / address</label>
+            <input class="field" id="m-site-location" placeholder="e.g. 14 Oldham Street, Manchester">
+          </div>
+          <div>
+            <label class="label">Postcode</label>
+            <input class="field uppercase" id="m-site-postcode" placeholder="e.g. M1 1JN">
+          </div>
+        </div>
+        <div>
+          <label class="label">Number of staff at this site</label>
+          <input class="field" type="number" min="0" id="m-site-staff" placeholder="e.g. 14">
+        </div>
+        <div>
+          <label class="label">Description &amp; facilities <span class="font-normal text-grey-400">(optional)</span></label>
+          <textarea class="field" rows="2" id="m-site-desc" placeholder="e.g. Commercial kitchen, cellar, and outdoor customer seating"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 px-6 py-4 bg-grey-50 border-t hairline rounded-b-2xl">
+        <button class="btn btn-ghost btn-sm" onclick="closeSiteModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSiteModal()">Save site</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Modal (Invite) -->
+  <div class="overlay" id="userModal">
+    <div class="modal">
+      <div class="flex items-center justify-between px-6 py-4 border-b hairline">
+        <h3 class="font-display font-semibold text-ink text-lg">Invite team member</h3>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="label">Full name</label>
+          <input class="field" id="m-user-name" placeholder="e.g. Sarah Jenkins">
+        </div>
+        <div>
+          <label class="label">Work email</label>
+          <input class="field" type="email" id="m-user-email" placeholder="e.g. sarah@thecopperkettle.co.uk">
+        </div>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="label">Role</label>
+            <select class="field" id="m-user-role">
+              <option value="Site manager">Site manager</option>
+              <option value="Staff / Floor lead">Staff / Floor lead</option>
+              <option value="Health & Safety lead">Health &amp; Safety lead</option>
+              <option value="Owner / Director">Owner / Director</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Site access</label>
+            <select class="field" id="m-user-sites">
+              <option value="All sites">All sites</option>
+              <option value="Northern Quarter café">Northern Quarter café</option>
+              <option value="Deansgate kitchen">Deansgate kitchen</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 px-6 py-4 bg-grey-50 border-t hairline rounded-b-2xl">
+        <button class="btn btn-ghost btn-sm" onclick="closeUserModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveUserModal()">Send invite</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const B = window.BALLAST;
+    const biz = B.business;
+
+    // Ensure defaults for new fields if not already populated
+    if (!biz.companyNumber) biz.companyNumber = '09842145';
+    if (!biz.sicCode) biz.sicCode = '56101';
+    if (!biz.address) biz.address = '14–16 Oldham Street, Manchester, Greater Manchester';
+
+    const tabs = [
+      ['profile', 'Business profile'],
+      ['sites', 'Sites & premises'],
+      ['users', 'Users & roles']
+    ];
+    let activeTab = 'profile';
+
+    function renderTabs() {
+      document.getElementById('tabs').innerHTML = tabs.map(([k, l]) =>
+        `<button class="px-4 py-2.5 text-sm font-medium -mb-px border-b-2 transition ${activeTab === k ? 'border-brand-500 text-ink' : 'border-transparent text-grey-500 hover:text-ink'}" data-tab="${k}">${l}</button>`
+      ).join('');
+
+      document.querySelectorAll('[data-tab]').forEach(b => {
+        b.onclick = () => {
+          activeTab = b.dataset.tab;
+          renderTabs();
+          document.querySelectorAll('.tabpane').forEach(p => p.classList.add('hidden'));
+          document.getElementById('tab-' + activeTab).classList.remove('hidden');
+        };
+      });
+    }
+
+    function renderProfileForm() {
+      const fields = [
+        { id: 'f-name', label: 'Trading name', val: biz.name },
+        { id: 'f-legalName', label: 'Legal entity name', val: biz.legalName },
+        { id: 'f-type', label: 'Business sector', val: biz.type, select: ['Hospitality & food', 'Construction', 'Trade', 'Retail', 'Care (child)', 'Care (adult)', 'Property & facilities'] },
+        { id: 'f-companyNumber', label: 'Corporation / Companies House number', val: biz.companyNumber, hint: '8-digit UK company registration number' },
+        { id: 'f-sicCode', label: 'SIC Code (optional)', val: biz.sicCode, hint: 'e.g. 56101 — Licensed restaurants' },
+        { id: 'f-address', label: 'Registered business address', val: biz.address, hint: 'Official trading or registered office address' },
+        { id: 'f-jurisdiction', label: 'Jurisdiction', val: biz.jurisdiction, select: ['England', 'Wales', 'Scotland', 'Northern Ireland'] },
+        { id: 'f-council', label: 'Primary local authority / council', val: biz.council }
+      ];
+
+      document.getElementById('profileForm').innerHTML = fields.map(f => {
+        if (f.select) {
+          return `
+            <div>
+              <label class="label">${f.label}</label>
+              <select class="field" id="${f.id}">
+                ${f.select.map(opt => `<option ${opt === f.val ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>`;
+        }
+        return `
+          <div>
+            <label class="label">${f.label}</label>
+            <input class="field" id="${f.id}" value="${f.val || ''}">
+            ${f.hint ? `<p class="text-xs text-grey-500 mt-1">${f.hint}</p>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    function renderActivities() {
+      document.getElementById('actCountBadge').textContent = biz.activities.length + ' active';
+      document.getElementById('acts').innerHTML = biz.activities.map(a => `
+        <span class="pill st-info gap-1.5 py-1 px-3">
+          <span>${a}</span>
+          <button type="button" class="text-grey-400 hover:text-bad font-bold ml-1 text-sm leading-none" onclick="removeActivity('${a}')" title="Remove activity">&times;</button>
+        </span>
+      `).join('');
+    }
+
+    window.removeActivity = function (act) {
+      biz.activities = biz.activities.filter(a => a !== act);
+      renderActivities();
+      UI.toast('Removed activity: ' + act);
+    };
+
+    window.addCustomActivity = function () {
+      const titleInput = document.getElementById('newActTitle');
+      const descInput = document.getElementById('newActDesc');
+      const title = titleInput.value.trim();
+
+      if (!title) {
+        UI.toast('Please enter an activity name');
+        return;
+      }
+      if (biz.activities.includes(title)) {
+        UI.toast('Activity already active');
+        return;
+      }
+
+      biz.activities.push(title);
+      titleInput.value = '';
+      descInput.value = '';
+      renderActivities();
+      UI.toast('Added activity: ' + title);
+    };
+
+    function renderSitesTable() {
+      document.getElementById('siteRows').innerHTML = biz.sites.map((s, idx) => `
+        <tr>
+          <td class="font-medium text-ink">
+            <div>${s.name}</div>
+            <div class="text-xs text-grey-400">Site #${idx + 1}</div>
+          </td>
+          <td class="text-grey-700 text-sm">
+            <div>${s.location || s.city || '—'}</div>
+            ${s.postcode ? `<span class="inline-block mt-0.5 text-xs text-grey-500 font-mono">${s.postcode}</span>` : ''}
+          </td>
+          <td class="tnum text-grey-700 font-semibold">${s.staff || 0}</td>
+          <td class="text-grey-500 text-xs max-w-xs truncate" title="${s.description || 'Standard premises'}">
+            ${s.description || 'Standard operating premises'}
+          </td>
+          <td class="text-right whitespace-nowrap">
+            <button class="btn btn-quiet btn-sm" onclick="editSite('${s.id}')">Edit</button>
+            ${biz.sites.length > 1 ? `
+              <button class="btn btn-quiet btn-sm text-bad hover:bg-red-50" onclick="deleteSite('${s.id}')">Delete</button>
+            ` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderUsersTable() {
+      document.getElementById('userRows').innerHTML = B.users.map(u => `
+        <tr>
+          <td>
+            <div class="flex items-center gap-2.5">
+              <span class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-xs font-semibold">
+                ${u.name.split(' ').map(x => x[0]).slice(0, 2).join('')}
+              </span>
+              <span class="font-medium text-ink">${u.name}</span>
+            </div>
+          </td>
+          <td><span class="pill st-na text-xs">${u.role}</span></td>
+          <td class="text-grey-600 text-sm">${u.email}</td>
+          <td class="text-grey-600 text-sm">${u.sites}</td>
+          <td class="text-right">
+            <button class="btn btn-quiet btn-sm" onclick="UI.toast('Managing permissions for ${u.name}')">Manage</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Site Modal functions
+    window.openSiteModal = function () {
+      document.getElementById('siteModalTitle').textContent = 'Add operating site';
+      document.getElementById('siteEditId').value = '';
+      document.getElementById('m-site-name').value = '';
+      document.getElementById('m-site-location').value = '';
+      document.getElementById('m-site-postcode').value = '';
+      document.getElementById('m-site-staff').value = '6';
+      document.getElementById('m-site-desc').value = '';
+      document.getElementById('siteModal').classList.add('open');
+    };
+
+    window.closeSiteModal = function () {
+      document.getElementById('siteModal').classList.remove('open');
+    };
+
+    window.editSite = function (siteId) {
+      const s = biz.sites.find(x => x.id === siteId);
+      if (!s) return;
+      document.getElementById('siteModalTitle').textContent = 'Edit site: ' + s.name;
+      document.getElementById('siteEditId').value = s.id;
+      document.getElementById('m-site-name').value = s.name;
+      document.getElementById('m-site-location').value = s.location || s.city || '';
+      document.getElementById('m-site-postcode').value = s.postcode || '';
+      document.getElementById('m-site-staff').value = s.staff || 0;
+      document.getElementById('m-site-desc').value = s.description || '';
+      document.getElementById('siteModal').classList.add('open');
+    };
+
+    window.saveSiteModal = function () {
+      const editId = document.getElementById('siteEditId').value;
+      const name = document.getElementById('m-site-name').value.trim() || 'New Site';
+      const location = document.getElementById('m-site-location').value.trim();
+      const postcode = document.getElementById('m-site-postcode').value.trim().toUpperCase();
+      const staff = parseInt(document.getElementById('m-site-staff').value, 10) || 0;
+      const description = document.getElementById('m-site-desc').value.trim();
+
+      if (editId) {
+        const s = biz.sites.find(x => x.id === editId);
+        if (s) {
+          s.name = name;
+          s.location = location;
+          s.postcode = postcode;
+          s.staff = staff;
+          s.description = description;
+        }
+        UI.toast('Site updated: ' + name);
+      } else {
+        const newSite = {
+          id: 's' + (biz.sites.length + 1) + '-' + Date.now().toString(36),
+          name,
+          location,
+          city: 'Manchester',
+          postcode,
+          staff,
+          description
+        };
+        biz.sites.push(newSite);
+        UI.toast('Site added: ' + name);
+      }
+
+      // Recompute total headcount
+      biz.headcount = biz.sites.reduce((acc, x) => acc + (x.staff || 0), 0);
+      closeSiteModal();
+      renderSitesTable();
+    };
+
+    window.deleteSite = function (siteId) {
+      if (biz.sites.length <= 1) {
+        UI.toast('You must have at least one operating site');
+        return;
+      }
+      const s = biz.sites.find(x => x.id === siteId);
+      const name = s ? s.name : 'Site';
+      biz.sites = biz.sites.filter(x => x.id !== siteId);
+      biz.headcount = biz.sites.reduce((acc, x) => acc + (x.staff || 0), 0);
+      renderSitesTable();
+      UI.toast('Deleted ' + name);
+    };
+
+    // User Modal functions
+    window.openUserModal = function () {
+      document.getElementById('m-user-name').value = '';
+      document.getElementById('m-user-email').value = '';
+      document.getElementById('userModal').classList.add('open');
+    };
+
+    window.closeUserModal = function () {
+      document.getElementById('userModal').classList.remove('open');
+    };
+
+    window.saveUserModal = function () {
+      const name = document.getElementById('m-user-name').value.trim();
+      const email = document.getElementById('m-user-email').value.trim();
+      const role = document.getElementById('m-user-role').value;
+      const sites = document.getElementById('m-user-sites').value;
+
+      if (!name || !email) {
+        UI.toast('Please provide name and email');
+        return;
+      }
+
+      B.users.push({
+        id: 'u' + (B.users.length + 1),
+        name,
+        role,
+        email,
+        sites
+      });
+
+      closeUserModal();
+      renderUsersTable();
+      UI.toast('Invitation sent to ' + email);
+    };
+
+    window.saveAllSettings = function () {
+      biz.name = document.getElementById('f-name').value.trim() || biz.name;
+      biz.legalName = document.getElementById('f-legalName').value.trim() || biz.legalName;
+      biz.type = document.getElementById('f-type').value;
+      biz.companyNumber = document.getElementById('f-companyNumber').value.trim();
+      biz.sicCode = document.getElementById('f-sicCode').value.trim();
+      biz.address = document.getElementById('f-address').value.trim();
+      biz.jurisdiction = document.getElementById('f-jurisdiction').value;
+      biz.council = document.getElementById('f-council').value.trim();
+
+      UI.toast('Settings saved successfully');
+    };
+
+    window.rerunAssessment = function () {
+      UI.toast('Re-evaluating obligations across ' + biz.sites.length + ' sites & ' + biz.activities.length + ' activities…');
+    };
+
+    // Initialize page
+    renderTabs();
+    renderProfileForm();
+    renderActivities();
+    renderSitesTable();
+    renderUsersTable();
+  </script>
+</body>
+</html>

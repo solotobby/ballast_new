@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Set up your business · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <style>
+    .site-card {
+      background: #FBFCFE;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color .15s ease;
+    }
+    .site-card:focus-within {
+      border-color: #B3E0F7;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-grey-50">
+  <!-- top bar -->
+  <div class="h-16 border-b hairline bg-white flex items-center px-6 gap-3">
+    <div class="w-8 h-8 rounded-lg grid place-items-center" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#0E1319" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v6a7 7 0 0 0 14 0V8"/></svg>
+    </div>
+    <span class="font-display font-semibold">Ballast</span>
+    <span class="text-sm text-grey-500 ml-2">Business set-up</span>
+    <a href="login.html" class="ml-auto text-sm text-grey-500 hover:text-ink">Sign in instead</a>
+  </div>
+
+  <div class="max-w-2xl mx-auto px-6 py-10">
+    <!-- stepper -->
+    <div class="flex items-center gap-2 mb-8" id="stepper"></div>
+
+    <div class="card p-7" id="stepCard"></div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script>
+    const B = window.BALLAST;
+    
+    // Core onboarding state
+    const state = {
+      name: 'The Copper Kettle Ltd',
+      type: 'Hospitality & food',
+      address: '14–16 Oldham Street, Manchester, Greater Manchester',
+      companyNumber: '09842145',
+      sicCode: '56101',
+      jurisdiction: 'England',
+      council: 'Manchester City Council',
+      sites: [
+        {
+          id: 'site-1',
+          name: 'Northern Quarter (Main Premises)',
+          location: '14 Oldham Street, Manchester',
+          postcode: 'M1 1JN',
+          staffCount: '16',
+          description: 'Two-floor dining room, commercial kitchen, bar & cellar.'
+        },
+        {
+          id: 'site-2',
+          name: 'Ancoats Roastery & Kiosk',
+          location: '42 Blossom Street, Ancoats, Manchester',
+          postcode: 'M4 6BF',
+          staffCount: '6',
+          description: 'Speciality coffee service, on-site roasting, and pavement outdoor seating.'
+        }
+      ],
+      activities: [
+        'Food preparation',
+        'Alcohol sales',
+        'Late-night refreshment',
+        'Card & online payments',
+        'CCTV in use',
+        'Employs staff',
+        'Handles customer data',
+        'Operates gas appliances'
+      ]
+    };
+
+    const BASE_ACTIVITIES = [
+      ['Food preparation', 'Food hygiene regulations, HACCP, allergen controls'],
+      ['Alcohol sales', 'Premises licence, personal licence holder & DPS'],
+      ['Late-night refreshment', 'Hot food/drink provision after 23:00'],
+      ['Card & online payments', 'PCI DSS compliance, secure transaction handling'],
+      ['CCTV in use', 'DPIA, ICO registration & public privacy notices'],
+      ['Employs staff', 'Right to work, employers liability insurance & workplace pensions'],
+      ['Handles customer data', 'UK GDPR, privacy policy & subject access handling'],
+      ['Operates gas appliances', 'Gas Safety (Installation and Use) Regs & annual CP12'],
+      ['Outdoor seating on highway', 'Local authority pavement licence & public liability']
+    ];
+
+    const steps = ['Basics', 'Size & location', 'Activities', 'Review'];
+    let step = 0;
+
+    function renderStepper() {
+      document.getElementById('stepper').innerHTML = steps.map((s, i) => `
+        <div class="flex items-center ${i < steps.length - 1 ? 'flex-1' : ''}">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full grid place-items-center text-xs font-semibold ${i < step ? 'bg-brand-600 text-white' : i === step ? 'bg-brand-100 text-brand-700 ring-2 ring-brand-300' : 'bg-grey-100 text-grey-400'}">${i < step ? '✓' : i + 1}</span>
+            <span class="text-sm font-medium ${i === step ? 'text-ink' : 'text-grey-400'} hide-mobile">${s}</span>
+          </div>
+          ${i < steps.length - 1 ? `<div class="flex-1 h-px mx-2 ${i < step ? 'bg-brand-400' : 'bg-grey-200'}"></div>` : ''}
+        </div>`).join('');
+    }
+
+    function nav(back, next, nextLabel) {
+      return `<div class="flex justify-between mt-8 pt-5 border-t hairline">
+        ${back ? `<button type="button" class="btn btn-ghost btn-sm" onclick="go(${step - 1})">Back</button>` : '<span></span>'}
+        <button type="button" class="btn btn-primary btn-sm" id="nextBtn">${nextLabel || 'Continue'}</button>
+      </div>`;
+    }
+
+    function render() {
+      renderStepper();
+      const card = document.getElementById('stepCard');
+
+      // ----------------------------------------------------
+      // STEP 0: BASICS TAB
+      // ----------------------------------------------------
+      if (step === 0) {
+        card.innerHTML = `
+          <h2 class="font-display text-xl font-semibold mb-1">Tell us about your business</h2>
+          <p class="text-sm text-grey-500 mb-6">Enter your registered business identity and classification to tailor your legal requirements.</p>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="label">Trading / company name</label>
+              <input class="field" id="i-name" placeholder="e.g. The Copper Kettle Ltd" value="${state.name}">
+            </div>
+
+            <div>
+              <label class="label">Business type / sector</label>
+              <select class="field" id="i-type">
+                ${['Hospitality & food', 'Construction', 'Trade', 'Retail', 'Care (child)', 'Care (adult)', 'Property & facilities'].map(t => `<option ${t === state.type ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label class="label">Registered business address</label>
+              <input class="field" id="i-address" placeholder="e.g. 14–16 Oldham Street, Manchester" value="${state.address || ''}">
+              <p class="text-xs text-grey-500 mt-1">Official trading or registered office address.</p>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label">Corporation / Companies House number</label>
+                <input class="field" id="i-companyNumber" placeholder="e.g. 09842145" value="${state.companyNumber || ''}">
+                <p class="text-xs text-grey-500 mt-1">8-digit UK company registration number.</p>
+              </div>
+
+              <div>
+                <label class="label">SIC Code <span class="font-normal text-grey-400">(optional)</span></label>
+                <input class="field" id="i-sicCode" placeholder="e.g. 56101 - Restaurants" value="${state.sicCode || ''}">
+                <p class="text-xs text-grey-500 mt-1">Standard Industrial Classification code.</p>
+              </div>
+            </div>
+          </div>
+          ${nav(false, true)}`;
+
+        document.getElementById('nextBtn').onclick = () => {
+          state.name = document.getElementById('i-name').value.trim() || 'My Business';
+          state.type = document.getElementById('i-type').value;
+          state.address = document.getElementById('i-address').value.trim();
+          state.companyNumber = document.getElementById('i-companyNumber').value.trim();
+          state.sicCode = document.getElementById('i-sicCode').value.trim();
+          go(1);
+        };
+      }
+
+      // ----------------------------------------------------
+      // STEP 1: SIZE & LOCATION TAB (WITH MULTI-SITE CONFIG)
+      // ----------------------------------------------------
+      else if (step === 1) {
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-4 mb-1">
+            <div>
+              <h2 class="font-display text-xl font-semibold">Size, sites &amp; location</h2>
+              <p class="text-sm text-grey-500 mb-5">Configure every premises your business operates from. Site specifics drive local licensing, fire risk, and food safety duties.</p>
+            </div>
+            <span class="pill st-info text-xs flex-none" id="siteCounterBadge">${state.sites.length} site${state.sites.length === 1 ? '' : 's'}</span>
+          </div>
+
+          <!-- jurisdiction & council -->
+          <div class="grid sm:grid-cols-2 gap-4 p-4 rounded-xl bg-grey-50 border hairline mb-6">
+            <div>
+              <label class="label">Jurisdiction</label>
+              <select class="field" id="i-jur">
+                ${['England', 'Wales', 'Scotland', 'Northern Ireland'].map(t => `<option ${t === state.jurisdiction ? 'selected' : ''}>${t}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="label">Primary local authority / council</label>
+              <input class="field" id="i-council" value="${state.council}">
+            </div>
+          </div>
+
+          <!-- sites container -->
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold text-ink">Operating sites &amp; premises</h3>
+              <p class="text-xs text-grey-500">Provide details for all active sites to map site-specific compliance duties.</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="addSiteBtn">
+              ${UI.icon('plus', 'w-4 h-4')} Add another site
+            </button>
+          </div>
+
+          <div class="space-y-4" id="sitesList">
+            ${renderSiteCards()}
+          </div>
+
+          ${nav(true, true)}`;
+
+        // Wire add site button
+        document.getElementById('addSiteBtn').onclick = () => {
+          saveCurrentSitesForm();
+          const newIdx = state.sites.length + 1;
+          state.sites.push({
+            id: 'site-' + Date.now(),
+            name: 'Site ' + newIdx,
+            location: '',
+            postcode: '',
+            staffCount: '5',
+            description: ''
+          });
+          render();
+        };
+
+        // Wire remove site buttons
+        card.querySelectorAll('[data-remove-site]').forEach(btn => {
+          btn.onclick = () => {
+            saveCurrentSitesForm();
+            const idx = parseInt(btn.dataset.removeSite, 10);
+            if (state.sites.length > 1) {
+              state.sites.splice(idx, 1);
+              render();
+            }
+          };
+        });
+
+        document.getElementById('nextBtn').onclick = () => {
+          saveCurrentSitesForm();
+          state.jurisdiction = document.getElementById('i-jur').value;
+          state.council = document.getElementById('i-council').value;
+          go(2);
+        };
+      }
+
+      // ----------------------------------------------------
+      // STEP 2: ACTIVITIES TAB (WITH ADD CUSTOM ACTIVITY)
+      // ----------------------------------------------------
+      else if (step === 2) {
+        card.innerHTML = `
+          <h2 class="font-display text-xl font-semibold mb-1">What does your business do?</h2>
+          <p class="text-sm text-grey-500 mb-5">Select all activities that apply. Each activity switches on statutory rules, inspections, and licensing duties.</p>
+
+          <!-- activities grid -->
+          <div class="grid sm:grid-cols-2 gap-2.5 mb-6" id="actGrid">
+            ${renderActivityButtons()}
+          </div>
+
+          <!-- add custom activity box -->
+          <div class="p-4 rounded-xl border border-dashed border-grey-300 bg-grey-50 mb-6">
+            <div class="text-sm font-semibold text-ink mb-1 flex items-center gap-1.5">
+              ${UI.icon('plus', 'w-4 h-4 text-brand-600')} Add more activities or custom operations
+            </div>
+            <p class="text-xs text-grey-500 mb-3">Does your business carry out specialized operations? Add it here to be factored into compliance mapping.</p>
+            <div class="space-y-2">
+              <input class="field text-sm" id="customActName" placeholder="Activity name (e.g. Hazardous chemical storage, Live music events, Deep frying)">
+              <div class="flex gap-2">
+                <input class="field text-sm flex-1" id="customActDesc" placeholder="Description or regulatory notes (optional)">
+                <button type="button" class="btn btn-ghost btn-sm" id="submitCustomActBtn">Add to list</button>
+              </div>
+            </div>
+          </div>
+
+          ${nav(true, true, 'Generate my obligations')}`;
+
+        wireActivityClicks();
+
+        // Wire Add Custom Activity
+        document.getElementById('submitCustomActBtn').onclick = () => {
+          const nameInput = document.getElementById('customActName');
+          const descInput = document.getElementById('customActDesc');
+          const actName = nameInput.value.trim();
+          const actDesc = descInput.value.trim() || 'Custom operational activity';
+
+          if (actName) {
+            BASE_ACTIVITIES.push([actName, actDesc]);
+            if (!state.activities.includes(actName)) {
+              state.activities.push(actName);
+            }
+            nameInput.value = '';
+            descInput.value = '';
+            // Re-render activities grid
+            document.getElementById('actGrid').innerHTML = renderActivityButtons();
+            wireActivityClicks();
+            UI.toast('Added activity: ' + actName);
+          }
+        };
+
+        document.getElementById('nextBtn').onclick = () => generate();
+      }
+
+      // ----------------------------------------------------
+      // STEP 3: REVIEW / PROFILE READY TAB
+      // ----------------------------------------------------
+      else if (step === 3) {
+        const count = B.obligations.filter(o => o.status !== 'na').length;
+        const totalStaff = state.sites.reduce((acc, s) => acc + (parseInt(s.staffCount, 10) || 0), 0);
+
+        card.innerHTML = `
+          <div class="text-center py-4">
+            <div class="w-16 h-16 rounded-2xl grid place-items-center text-white mx-auto mb-4" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+              ${UI.icon('check', 'w-8 h-8')}
+            </div>
+            <h2 class="font-display text-2xl font-semibold mb-1">Your compliance profile is ready</h2>
+            <p class="text-sm text-grey-500 mb-6 max-w-lg mx-auto">
+              Based on your sector, <strong>${state.sites.length} site${state.sites.length === 1 ? '' : 's'}</strong>, 
+              <strong>${totalStaff} staff</strong>, and <strong>${state.activities.length} activities</strong>, 
+              Ballast has mapped <span class="font-semibold text-ink">${count} statutory obligations</span> to <strong>${state.name}</strong>.
+            </p>
+
+            <!-- summary box -->
+            <div class="p-4 rounded-xl bg-grey-50 border hairline text-left mb-6 text-sm space-y-2 max-w-lg mx-auto">
+              <div class="flex justify-between pb-2 border-b hairline">
+                <span class="text-grey-500">Business / Entity:</span>
+                <span class="font-medium text-ink">${state.name} (${state.companyNumber ? 'Co. #' + state.companyNumber : 'Unincorporated'})</span>
+              </div>
+              <div class="flex justify-between pb-2 border-b hairline">
+                <span class="text-grey-500">Registered Address:</span>
+                <span class="font-medium text-ink truncate max-w-xs" title="${state.address}">${state.address || 'Standard premises'}</span>
+              </div>
+              ${state.sicCode ? `
+              <div class="flex justify-between pb-2 border-b hairline">
+                <span class="text-grey-500">SIC Code:</span>
+                <span class="font-medium text-ink">${state.sicCode}</span>
+              </div>` : ''}
+              <div class="flex justify-between pb-2 border-b hairline">
+                <span class="text-grey-500">Jurisdiction &amp; Council:</span>
+                <span class="font-medium text-ink">${state.jurisdiction} · ${state.council}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-grey-500">Configured Sites:</span>
+                <span class="font-medium text-ink">${state.sites.map(s => s.name).join(', ')}</span>
+              </div>
+            </div>
+
+            <!-- tier breakdown -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto mb-7">
+              ${B.tierList().map(t => {
+                const n = B.obligations.filter(o => o.tier === t && o.status !== 'na').length;
+                return `
+                  <div class="p-3 rounded-xl bg-grey-50 border hairline">
+                    <div class="font-display text-2xl font-bold text-ink tnum">${n}</div>
+                    <div class="text-xs text-grey-500">${t}</div>
+                  </div>`;
+              }).join('')}
+            </div>
+
+            <div class="flex justify-center gap-3">
+              <a href="dashboard.html" class="btn btn-primary">
+                Open my compliance dashboard ${UI.icon('arrowRight')}
+              </a>
+            </div>
+          </div>`;
+      }
+    }
+
+    // Helper: render dynamic site cards
+    function renderSiteCards() {
+      return state.sites.map((site, index) => `
+        <div class="site-card space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b hairline">
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-700">Site ${index + 1}</span>
+            ${state.sites.length > 1 ? `
+              <button type="button" class="text-xs text-bad hover:underline font-medium" data-remove-site="${index}">
+                Remove site
+              </button>` : ''}
+          </div>
+          
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="label text-xs">Site name / venue label</label>
+              <input class="field text-sm" name="site-name-${index}" placeholder="e.g. Central Warehouse / High Street Branch" value="${site.name || ''}">
+            </div>
+            <div>
+              <label class="label text-xs">Number of staff at this site</label>
+              <input class="field text-sm" type="number" min="0" name="site-staff-${index}" placeholder="e.g. 8" value="${site.staffCount || ''}">
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-3">
+            <div class="sm:col-span-2">
+              <label class="label text-xs">Site address / location</label>
+              <input class="field text-sm" name="site-location-${index}" placeholder="e.g. 14 Oldham Street, Manchester" value="${site.location || ''}">
+            </div>
+            <div>
+              <label class="label text-xs">Postcode</label>
+              <input class="field text-sm uppercase" name="site-postcode-${index}" placeholder="e.g. M1 1JN" value="${site.postcode || ''}">
+            </div>
+          </div>
+
+          <div>
+            <label class="label text-xs">Site description <span class="font-normal text-grey-400">(optional)</span></label>
+            <input class="field text-sm" name="site-desc-${index}" placeholder="e.g. Commercial kitchen, cellar, and outdoor customer seating" value="${site.description || ''}">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Helper: Save inputs from sites cards into state
+    function saveCurrentSitesForm() {
+      state.sites.forEach((site, index) => {
+        const nameEl = document.querySelector(`[name="site-name-${index}"]`);
+        const staffEl = document.querySelector(`[name="site-staff-${index}"]`);
+        const locEl = document.querySelector(`[name="site-location-${index}"]`);
+        const postEl = document.querySelector(`[name="site-postcode-${index}"]`);
+        const descEl = document.querySelector(`[name="site-desc-${index}"]`);
+
+        if (nameEl) site.name = nameEl.value.trim() || `Site ${index + 1}`;
+        if (staffEl) site.staffCount = staffEl.value.trim() || '0';
+        if (locEl) site.location = locEl.value.trim();
+        if (postEl) site.postcode = postEl.value.trim().toUpperCase();
+        if (descEl) site.description = descEl.value.trim();
+      });
+    }
+
+    // Helper: render activities buttons
+    function renderActivityButtons() {
+      return BASE_ACTIVITIES.map(([a, d]) => {
+        const on = state.activities.includes(a);
+        return `
+          <button type="button" class="text-left p-3.5 rounded-xl border transition ${on ? 'border-brand-400 bg-brand-50' : 'border-grey-200 hover:border-grey-300'}" data-act="${a}" data-on="${on}">
+            <div class="flex items-center justify-between mb-0.5">
+              <span class="text-sm font-semibold text-ink">${a}</span>
+              <span class="w-4 h-4 rounded-full grid place-items-center ${on ? 'bg-brand-600 text-white' : 'border border-grey-300'}">${on ? '✓' : ''}</span>
+            </div>
+            <div class="text-xs text-grey-500">${d}</div>
+          </button>`;
+      }).join('');
+    }
+
+    // Helper: wire clicks for activity buttons
+    function wireActivityClicks() {
+      const card = document.getElementById('stepCard');
+      card.querySelectorAll('[data-act]').forEach(b => {
+        b.onclick = () => {
+          const a = b.dataset.act;
+          const on = !(b.dataset.on === 'true');
+          b.dataset.on = on;
+          if (on) {
+            if (!state.activities.includes(a)) state.activities.push(a);
+            b.className = 'text-left p-3.5 rounded-xl border transition border-brand-400 bg-brand-50';
+            b.querySelector('span:last-child').className = 'w-4 h-4 rounded-full grid place-items-center bg-brand-600 text-white';
+            b.querySelector('span:last-child').textContent = '✓';
+          } else {
+            state.activities = state.activities.filter(x => x !== a);
+            b.className = 'text-left p-3.5 rounded-xl border transition border-grey-200 hover:border-grey-300';
+            b.querySelector('span:last-child').className = 'w-4 h-4 rounded-full grid place-items-center border border-grey-300';
+            b.querySelector('span:last-child').textContent = '';
+          }
+        };
+      });
+    }
+
+    // AI Generation step simulation
+    function generate() {
+      const card = document.getElementById('stepCard');
+      const sitesCount = state.sites.length;
+      const actsCount = state.activities.length;
+
+      card.innerHTML = `
+        <div class="text-center py-12">
+          <div class="w-14 h-14 rounded-full border-4 border-grey-200 border-t-brand-500 animate-spin mx-auto mb-5"></div>
+          <div class="font-display text-lg font-semibold text-ink mb-1">Identifying your obligations…</div>
+          <div class="text-sm text-grey-500" id="genMsg">Matching ${state.name} against statutory registers…</div>
+        </div>`;
+
+      const msgs = [
+        `Analyzing ${state.type} profile & company #${state.companyNumber || 'unlisted'}…`,
+        `Applying ${state.jurisdiction} national legislation & ${state.council} bylaws…`,
+        `Evaluating site risks across ${sitesCount} premises (${state.sites.map(s => s.postcode || s.name).join(', ')})…`,
+        `Mapping statutory duties for ${actsCount} declared operational activities…`,
+        'Assembling personalized obligation register and inspection cadences…'
+      ];
+
+      let mi = 0;
+      const t = setInterval(() => {
+        mi++;
+        if (mi < msgs.length) {
+          document.getElementById('genMsg').textContent = msgs[mi];
+        } else {
+          clearInterval(t);
+          go(3);
+        }
+      }, 700);
+    }
+
+    window.go = n => {
+      step = n;
+      render();
+      window.scrollTo(0, 0);
+    };
+
+    render();
+  </script>
+</body>
+</html>

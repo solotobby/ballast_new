@@ -1,0 +1,89 @@
+/* Brand tokens from prototypes/ HTML design system — Ultra-Matured Precision System */
+:root {
+  /* Obsidian Palette */
+  --obsidian-950: #06090E;
+  --obsidian-900: #0A0E15;
+  --obsidian-850: #10151E;
+  --obsidian-800: #161D27;
+  --obsidian-700: #202A38;
+  --obsidian-border: rgba(255, 255, 255, 0.07);
+
+  /* Precision Brand Sapphire / Cyan */
+  --brand-50:  #F0F9FF;
+  --brand-100: #E0F2FE;
+  --brand-200: #BAE6FD;
+  --brand-300: #7DD3FC;
+  --brand-400: #38BDF8;
+  --brand-500: #0EA5E9;
+  --brand-600: #0284C7;
+  --brand-700: #0369A1;
+  --brand-800: #075985;
+  --brand-900: #0C4A6E;
+
+  /* Prototype Crimson / Red Brand Accent (matching reference mockup) */
+  --brand-crimson: #E52E2E;
+  --brand-crimson-hover: #DC2626;
+  --brand-crimson-light: #FEF2F2;
+  --brand-crimson-glow: rgba(229, 46, 46, 0.4);
+
+  /* Sunset Gradient & Hazard Pattern Textures */
+  --gradient-sunset: linear-gradient(135deg, #FF4F38 0%, #FF7824 50%, #FFA938 100%);
+  --pattern-hazard-amber: repeating-linear-gradient(45deg, #F59E0B, #F59E0B 2.5px, #FEF3C7 2.5px, #FEF3C7 5px);
+
+  /* Legacy navy aliases for backwards compatibility */
+  --navy-900: #06090E;
+  --navy-800: #0A0E15;
+  --navy-700: #10151E;
+  --navy-600: #161D27;
+  --brand-050: #F0F9FF;
+
+  /* Status Colors */
+  --teal-500: #0f9e8e;
+  --teal-600: #0b7a6d;
+  --teal-050: #e2f6f3;
+  --ok-500: #10B981;
+  --ok-600: #059669;
+  --ok-050: #ECFDF5;
+  --due-500: #F59E0B;
+  --due-600: #D97706;
+  --due-050: #FFFBEB;
+  --over-500: #EF4444;
+  --over-600: #DC2626;
+  --over-050: #FEF2F2;
+  --gap-500: #8B5CF6;
+  --gap-600: #7C3AED;
+  --gap-050: #F5F3FF;
+
+  /* Typographic Contrast */
+  --ink: #0B131E;
+  --ink-900: #0B131E;
+  --ink-700: #334155;
+  --ink-600: #475569;
+  --ink-500: #64748B;
+  --ink-400: #94A3B8;
+
+  /* Borders & Surfaces */
+  --border-light: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --line: #E2E8F0;
+  --line-2: #F1F5F9;
+  --bg: #F8FAFC;
+  --bg-canvas: #F8FAFC;
+  --bg-2: #F1F5F9;
+  --white: #ffffff;
+  --card-bg: #ffffff;
+
+  /* Border Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* Elevations & Shadows */
+  --sh-1: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  --sh-2: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --sh-3: 0 20px 48px -12px rgba(15, 23, 42, 0.16);
+  --sh-card: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  --sh-card-hover: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --sh-obsidian: 0 12px 32px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}

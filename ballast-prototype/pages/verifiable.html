@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verifiable compliance · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="verifiable">
+  <main class="content">
+    <div class="flex items-center gap-3 mb-6">
+      <h1 class="font-display text-2xl font-semibold text-ink">Verifiable compliance</h1>
+      <span class="pill st-info !py-0.5">Future phase</span>
+    </div>
+
+    <div class="card p-6 mb-4 flex flex-col md:flex-row gap-6 items-start">
+      <span class="w-14 h-14 rounded-2xl grid place-items-center text-white flex-none" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)" id="vicon"></span>
+      <div class="max-w-2xl">
+        <h2 class="font-display text-lg font-semibold text-ink mb-1.5">Prove your compliance to clients and insurers — without sharing everything</h2>
+        <p class="text-sm text-grey-600 leading-relaxed">Issue a tamper-evident attestation of your compliance status that a main contractor, prospective client, or insurer can verify independently. Selective disclosure lets you prove specific obligations are met without exposing unrelated data.</p>
+        <div class="mt-4 flex gap-2">
+          <button class="btn btn-primary btn-sm" onclick="UI.toast('Added to your interest list')">Notify me at launch</button>
+          <a href="dashboard.html" class="btn btn-ghost btn-sm">Back to dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-4" id="pillars"></div>
+
+    <div class="card p-6 opacity-70">
+      <div class="flex items-center justify-between mb-4">
+        <div class="font-display font-semibold">Preview — attestation you could issue</div>
+        <span class="tier-tag">Mock</span>
+      </div>
+      <div class="border hairline rounded-xl p-5 bg-grey-50 max-w-lg">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="w-10 h-10 rounded-lg grid place-items-center text-white" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)" id="badge"></span>
+          <div><div class="font-display font-semibold text-ink">Compliance attestation</div>
+            <div class="text-xs text-grey-500">Issued by Ballast · The Copper Kettle</div></div>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2 text-ok"><span class="dot" style="background:#3E9E7A"></span> Food safety management — verified</div>
+          <div class="flex items-center gap-2 text-ok"><span class="dot" style="background:#3E9E7A"></span> Employers&rsquo; liability insurance — verified</div>
+          <div class="flex items-center gap-2 text-grey-400"><span class="dot" style="background:#CBD5E1"></span> Other obligations — not disclosed</div>
+        </div>
+        <div class="mt-4 pt-3 border-t hairline text-xs text-grey-500 tnum">Valid to 2026-12-01 · revocable · verify at ballast.app/v/9F2A-…</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script>
+    document.getElementById('vicon').innerHTML = UI.icon('verifiable','w-7 h-7');
+    document.getElementById('badge').innerHTML = UI.icon('verifiable','w-5 h-5');
+    const pillars = [
+      ['verifiable','Tamper-evident','A cryptographic attestation a third party can validate without contacting you or Ballast.'],
+      ['evidence','Selective disclosure','Prove only the obligations that are asked for — nothing else about your business is revealed.'],
+      ['clock','Revocable & expiring','An out-of-date status can\u2019t be presented as current; attestations expire and can be revoked.']
+    ];
+    document.getElementById('pillars').innerHTML = pillars.map(([ic,t,d])=>`
+      <div class="card p-5"><span class="w-10 h-10 rounded-lg bg-brand-50 text-brand-700 grid place-items-center mb-3">${UI.icon(ic,'w-5 h-5')}</span>
+        <div class="font-semibold text-ink mb-1">${t}</div>
+        <p class="text-sm text-grey-600 leading-relaxed">${d}</p></div>`).join('');
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sign in · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" style="background:#0E1319;min-height:100vh">
+  <div class="min-h-screen flex flex-col" style="padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)">
+    <!-- brand header -->
+    <div class="flex-1 flex flex-col items-center justify-center px-6 text-center text-white relative overflow-hidden">
+      <div class="absolute -top-16 w-72 h-72 rounded-full" style="background:radial-gradient(circle,#1F7DB4,transparent 70%);opacity:.5"></div>
+      <div class="w-14 h-14 rounded-2xl grid place-items-center mb-5 relative" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#0E1319" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v6a7 7 0 0 0 14 0V8"/></svg>
+      </div>
+      <h1 class="font-display text-2xl font-semibold relative">Ballast for staff</h1>
+      <p class="text-[#9AA6B2] mt-2 max-w-xs relative">Your tasks, logs and training for The Copper Kettle — in one place.</p>
+    </div>
+
+    <!-- sheet -->
+    <div class="bg-white rounded-t-3xl p-6 pb-8" style="box-shadow:0 -8px 30px rgba(0,0,0,.2)">
+      <h2 class="font-display text-lg font-semibold mb-1">Sign in</h2>
+      <p class="text-sm text-grey-500 mb-5">Use the work email your manager added you with.</p>
+      <form id="form" class="space-y-4">
+        <div><label class="label">Work email</label><input class="field !py-3" type="email" value="rokafor@copperkettle.co"></div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="label !mb-0">Password</label>
+            <a href="forgot-password.html" class="text-xs text-brand-700 font-medium">Forgot?</a>
+          </div>
+          <input class="field !py-3" type="password" value="prototype">
+        </div>
+        <button class="btn btn-primary big-btn w-full">Sign in</button>
+      </form>
+      <div class="text-center text-sm text-grey-500 mt-5">First time here?
+        <a href="home.html" class="text-brand-700 font-medium">Activate your account</a></div>
+      <div class="text-center text-sm text-grey-500 mt-2">Owner or manager? <a href="../pages/login.html" class="text-brand-700 font-medium">Admin sign-in</a></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/ui.js"></script>
+  <script>
+    document.getElementById('form').addEventListener('submit', e=>{ e.preventDefault(); location.href='home.html'; });
+  </script>
+</body>
+</html>

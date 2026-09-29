@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Team & roles · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="team">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <h1 class="font-display text-2xl font-semibold text-ink">Team &amp; roles</h1>
+        <p class="text-sm text-grey-500 mt-1">Ballast staff and engineers, and what each can access and change.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" id="invite"></button>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5" id="accessLegend"></div>
+
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="dtable">
+        <thead><tr><th>Member</th><th>Role</th><th>Access</th><th>2FA</th><th>Last active</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/platform-data.js?v=8"></script>
+  <script src="../assets/js/platform-layout.js?v=8"></script>
+  <script>
+    const P = window.PLATFORM;
+    let team = P.team.map(m=>({...m}));
+    document.getElementById('invite').innerHTML = UI.icon('plus') + 'Invite teammate';
+    document.getElementById('invite').onclick = ()=> UI.toast('Opening invite form');
+
+    const ACCESS = {
+      full:        ['Full access', 'Everything, including team & config', 'st-bad'],
+      tenants:     ['Tenants', 'Manage businesses & support', 'st-info'],
+      rules:       ['Rule library', 'Author & publish rules and templates', 'st-due'],
+      engineering: ['Engineering', 'System, integrations & config', 'st-ok'],
+      support:     ['Support', 'Tickets & impersonation', 'st-na']
+    };
+    document.getElementById('accessLegend').innerHTML = Object.entries(ACCESS).map(([k,[l,d,cls]])=>`
+      <div class="card p-3"><span class="pill ${cls} !py-0.5 mb-2"><span class="dot"></span>${l}</span>
+        <div class="text-xs text-grey-500 leading-snug">${d}</div></div>`).join('');
+
+    function render(){
+      document.getElementById('rows').innerHTML = team.map(m=>{
+        const [l,,cls] = ACCESS[m.access];
+        return `<tr>
+          <td><div class="flex items-center gap-2.5"><span class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-xs font-semibold">${m.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</span>
+            <div><div class="font-medium text-ink">${m.name}</div><div class="text-xs text-grey-500">${m.email}</div></div></div></td>
+          <td class="text-grey-600 text-sm">${m.role}</td>
+          <td><span class="pill ${cls} !py-0.5"><span class="dot"></span>${l}</span></td>
+          <td>${m.twoFA?'<span class="pill st-ok !py-0.5"><span class="dot"></span>On</span>':'<span class="pill st-bad !py-0.5"><span class="dot"></span>Off</span>'}</td>
+          <td class="text-grey-500 text-sm">${m.lastActive}</td>
+          <td class="text-right"><button class="btn btn-quiet btn-sm" data-edit="${m.id}">${UI.icon('edit','w-4 h-4')}</button></td>
+        </tr>`;
+      }).join('');
+      document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editMember(b.dataset.edit));
+    }
+    function editMember(id){
+      const mem = team.find(x=>x.id===id);
+      const opts = Object.entries(ACCESS).map(([k,[l]])=>`<option value="${k}" ${k===mem.access?'selected':''}>${l}</option>`).join('');
+      const body = `<div class="flex items-center gap-3 mb-4"><span class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold">${mem.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</span>
+        <div><div class="font-medium">${mem.name}</div><div class="text-xs text-grey-500">${mem.role}</div></div></div>
+        <label class="label">Access level</label><select class="field" id="acc">${opts}</select>
+        <div class="text-xs text-grey-500 mt-2">Access controls what this person can change across the platform.</div>`;
+      const m = UI.modal('Edit access', body, `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn btn-primary btn-sm" id="sv">Save</button>`);
+      m.el.querySelector('#sv').onclick = ()=>{ mem.access=m.el.querySelector('#acc').value; m.close(); render(); UI.toast(mem.name+'\u2019s access updated · logged to audit'); };
+    }
+    render();
+  </script>
+</body>
+</html>

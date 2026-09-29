@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Log entry · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="log" data-staff-title="Log entry" data-staff-back="log.html">
+  <main class="staff-main">
+    <div id="entry"></div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF, B = window.BALLAST;
+    const e = S.myLog.find(x=>x.id===UI.param('id')) || S.myLog[0];
+    const obl = B.oblById(e.obl);
+    document.getElementById('entry').innerHTML = `
+      <div class="flex items-center gap-2 mb-3">
+        <span class="pill st-info">${e.type}</span>
+        <span class="pill st-ok"><span class="dot"></span>Recorded</span>
+      </div>
+      <h1 class="font-display text-xl font-semibold text-ink leading-snug mb-1">${e.summary}</h1>
+      <div class="text-sm text-grey-500 mb-5">Logged by ${S.me.name} · ${UI.fmtDate(e.date)}</div>
+
+      <div class="card p-4 mb-4">
+        <dl class="space-y-3 text-sm">
+          <div class="flex justify-between"><dt class="text-grey-500">Site</dt><dd class="font-medium">${S.me.site}</dd></div>
+          <div class="flex justify-between"><dt class="text-grey-500">Date</dt><dd class="font-medium tnum">${UI.fmtDate(e.date)}</dd></div>
+          <div class="flex justify-between gap-6"><dt class="text-grey-500">Relates to</dt>
+            <dd class="font-medium text-right">${e.obl}${obl?` · ${obl.title}`:''}</dd></div>
+        </dl>
+      </div>
+
+      ${obl?`<div class="card p-4 mb-4">
+        <div class="text-sm font-semibold mb-1">Why this matters</div>
+        <p class="text-sm text-grey-600 leading-relaxed">${obl.why}</p></div>`:''}
+
+      <div class="card p-4">
+        <div class="text-sm font-semibold mb-2">Attachments</div>
+        <div class="text-sm text-grey-500">No photos attached to this entry.</div>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button class="btn btn-ghost big-btn flex-1" onclick="UI.toast('Entry shared with your manager')">${UI.icon('message')}Share with manager</button>
+      </div>`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Learn · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="learn" data-staff-title="Learn">
+  <main class="staff-main">
+    <!-- progress summary -->
+    <div class="card p-4 mb-5 flex items-center gap-4">
+      <div class="ring-wrap" style="width:76px;height:76px">
+        <svg width="76" height="76" viewBox="0 0 76 76">
+          <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FCBF0"/><stop offset="1" stop-color="#1F7DB4"/></linearGradient></defs>
+          <circle class="ring-track" cx="38" cy="38" r="32" fill="none" stroke-width="8"/>
+          <circle class="ring-arc" id="arc" cx="38" cy="38" r="32" fill="none" stroke-width="8" stroke-dasharray="201" stroke-dashoffset="201"/>
+        </svg>
+        <div class="ring-center"><span class="font-display font-bold text-lg tnum" id="ringPct">0%</span></div>
+      </div>
+      <div class="flex-1">
+        <div class="font-display font-semibold">Your training</div>
+        <div class="text-sm text-grey-500 mb-2" id="summaryLine"></div>
+        <a href="#" id="certLink" class="text-sm text-brand-700 font-medium inline-flex items-center gap-1"></a>
+      </div>
+    </div>
+
+    <div class="seg mb-4" id="seg">
+      <button data-f="all" class="active">All</button>
+      <button data-f="assigned">To do</button>
+      <button data-f="in-progress">In progress</button>
+      <button data-f="completed">Done</button>
+    </div>
+
+    <div class="space-y-3" id="modules"></div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF, lc = S.learnCounts();
+    let filter='all';
+
+    // ring = share completed of total
+    const pct = Math.round(S.learning.filter(l=>l.status==='completed').length / S.learning.length * 100);
+    const C=201; setTimeout(()=>document.getElementById('arc').style.strokeDashoffset = C*(1-pct/100), 120);
+    let n=0; const t=setInterval(()=>{n+=2;if(n>=pct){n=pct;clearInterval(t);}document.getElementById('ringPct').textContent=n+'%';},18);
+    document.getElementById('summaryLine').textContent = `${lc.completed} done · ${lc.inProgress} in progress · ${lc.assigned} to do`;
+    document.getElementById('certLink').innerHTML = `${UI.icon('award','w-4 h-4')} ${lc.certs} certificates`;
+    document.getElementById('certLink').href = 'profile.html';
+
+    const catCol = {
+      'Food safety':['#2C7358','#E7F3EE'], 'Allergens':['#8A6412','#FBF1DC'],
+      'Fire safety':['#8F3527','#F8E7E2'], 'Data & security':['#155E88','#E4F2FB'],
+      'Health & safety':['#5A6675','#EEF2F6']
+    };
+    const statusPill = { assigned:'st-due', 'in-progress':'st-info', completed:'st-ok' };
+    const statusLabel = { assigned:'To do', 'in-progress':'In progress', completed:'Completed' };
+
+    function render(){
+      const list = S.learning.filter(l=>filter==='all'||l.status===filter);
+      document.getElementById('modules').innerHTML = list.map(l=>{
+        const [c,bg]=catCol[l.category]||['#5A6675','#EEF2F6'];
+        return `<a href="lesson.html?id=${l.id}" class="card p-4 block tap">
+          <div class="flex items-start gap-3">
+            <span class="w-11 h-11 rounded-xl grid place-items-center flex-none" style="background:${bg};color:${c}">${UI.icon('learn','w-5 h-5')}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1"><span class="pill ${statusPill[l.status]} !py-0.5"><span class="dot"></span>${statusLabel[l.status]}</span>
+                ${l.cert?`<span class="text-xs text-ok font-medium inline-flex items-center gap-1">${UI.icon('award','w-3.5 h-3.5')}Certified</span>`:''}</div>
+              <div class="text-[15px] font-semibold text-ink leading-snug">${l.title}</div>
+              <div class="text-xs text-grey-500 mt-0.5">${l.category} · ${l.minutes} min · ${l.lessons.length} lessons</div>
+              ${l.status!=='assigned'?`<div class="progress-track mt-2.5"><div class="progress-fill" style="width:${l.progress}%"></div></div>`:''}
+            </div>
+            ${UI.icon('chevron','w-4 h-4 text-grey-300 mt-3')}
+          </div>
+        </a>`;
+      }).join('') || `<div class="card p-8 text-center text-grey-500">Nothing here right now.</div>`;
+    }
+    render();
+    document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
+      filter=b.dataset.f;
+      document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active',x===b));
+      render();
+    });
+  </script>
+</body>
+</html>

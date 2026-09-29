@@ -1,0 +1,162 @@
+{
+  "id": "RP-HOSP",
+  "version": "v2026.3",
+  "sector": "hospitality",
+  "obligations": [
+    {
+      "id": "FSA-01",
+      "category": "food",
+      "title": "Food Hygiene Rating — maintain records for inspection",
+      "basis": "Food Safety Act 1990 · FSA",
+      "cadence": "Continuous",
+      "evidence": "SFBB diary, temperature logs",
+      "ownerRole": "Site Manager",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Food preparation"] }
+    },
+    {
+      "id": "FSA-02",
+      "category": "food",
+      "title": "HACCP / Safer Food Better Business pack kept current",
+      "basis": "Regulation (EC) 852/2004",
+      "cadence": "Recurring · daily",
+      "evidence": "Completed SFBB pages",
+      "ownerRole": "Site Manager",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Food preparation"] }
+    },
+    {
+      "id": "FSA-03",
+      "category": "food",
+      "title": "Allergen information available for all menu items",
+      "basis": "FIC Regulation 1169/2011",
+      "cadence": "Continuous",
+      "evidence": "Allergen matrix",
+      "ownerRole": "Owner",
+      "siteScope": "all",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Food preparation"] }
+    },
+    {
+      "id": "FIR-01",
+      "category": "fire",
+      "title": "Fire Risk Assessment reviewed annually",
+      "basis": "Regulatory Reform (Fire Safety) Order 2005",
+      "cadence": "Recurring · annual",
+      "evidence": "Signed FRA document",
+      "ownerRole": "Owner",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"] }
+    },
+    {
+      "id": "FIR-02",
+      "category": "fire",
+      "title": "Fire extinguisher & alarm servicing",
+      "basis": "BS 5306 / RRO 2005",
+      "cadence": "Recurring · annual",
+      "evidence": "Service certificate",
+      "ownerRole": "Owner",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"] }
+    },
+    {
+      "id": "FIR-03",
+      "category": "fire",
+      "title": "Emergency lighting monthly function test",
+      "basis": "BS 5266-1",
+      "cadence": "Recurring · monthly",
+      "evidence": "Test log entry",
+      "ownerRole": "Site Manager",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"], "minSites": 2 }
+    },
+    {
+      "id": "HS-01",
+      "category": "hs",
+      "title": "Employers’ Liability Insurance in force & displayed",
+      "basis": "Employers’ Liability (Compulsory Insurance) Act 1969",
+      "cadence": "Recurring · annual",
+      "evidence": "Certificate of insurance",
+      "ownerRole": "Owner",
+      "siteScope": "all",
+      "when": { "sectors": ["hospitality"], "employsStaff": true }
+    },
+    {
+      "id": "HS-02",
+      "category": "hs",
+      "title": "First aid provision & trained first-aider on site",
+      "basis": "Health & Safety (First-Aid) Regs 1981",
+      "cadence": "Continuous",
+      "evidence": "First-aid certificate",
+      "ownerRole": "Site Manager",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"], "employsStaff": true }
+    },
+    {
+      "id": "HS-03",
+      "category": "hs",
+      "title": "PAT / electrical equipment inspection",
+      "basis": "Electricity at Work Regs 1989",
+      "cadence": "Recurring · annual",
+      "evidence": "PAT test report",
+      "ownerRole": "Owner",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"] }
+    },
+    {
+      "id": "LIC-01",
+      "category": "licence",
+      "title": "Premises Licence — alcohol sales conditions",
+      "basis": "Licensing Act 2003",
+      "cadence": "Continuous",
+      "evidence": "Premises licence + conditions log",
+      "ownerRole": "Owner",
+      "siteScope": "each_site",
+      "source": "ai",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Alcohol sales"] }
+    },
+    {
+      "id": "LIC-02",
+      "category": "licence",
+      "title": "Age-verification (Challenge 25) policy operated",
+      "basis": "Licensing Act 2003 s.182",
+      "cadence": "Continuous",
+      "evidence": "Refusals log",
+      "ownerRole": "Site Manager",
+      "siteScope": "each_site",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Alcohol sales"] }
+    },
+    {
+      "id": "EMP-01",
+      "category": "employ",
+      "title": "Right-to-work checks for all employees",
+      "basis": "Immigration, Asylum & Nationality Act 2006",
+      "cadence": "One-off · per hire",
+      "evidence": "RTW check records",
+      "ownerRole": "Owner",
+      "siteScope": "all",
+      "when": { "sectors": ["hospitality"], "employsStaff": true }
+    },
+    {
+      "id": "EMP-02",
+      "category": "employ",
+      "title": "Written statement of employment particulars",
+      "basis": "Employment Rights Act 1996 s.1",
+      "cadence": "One-off · per hire",
+      "evidence": "Signed statements",
+      "ownerRole": "Owner",
+      "siteScope": "all",
+      "when": { "sectors": ["hospitality"], "employsStaff": true }
+    },
+    {
+      "id": "DAT-01",
+      "category": "data",
+      "title": "ICO data protection fee paid (registration)",
+      "basis": "Data Protection Act 2018",
+      "cadence": "Recurring · annual",
+      "evidence": "ICO payment reference",
+      "ownerRole": "Owner",
+      "siteScope": "all",
+      "when": { "sectors": ["hospitality"], "activitiesAny": ["Handles card payments"] }
+    }
+  ]
+}

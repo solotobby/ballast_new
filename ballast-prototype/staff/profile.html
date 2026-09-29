@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Profile · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+  <style>
+    .switch{position:relative;width:44px;height:26px;border-radius:999px;background:#CBD5E1;cursor:pointer;transition:background .15s;flex:none}
+    .switch.on{background:#1F7DB4}
+    .switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+    .switch.on::after{transform:translateX(18px)}
+  </style>
+</head>
+<body class="staff" data-staff-page="profile" data-staff-title="Profile">
+  <main class="staff-main">
+    <!-- profile header -->
+    <div class="card p-5 mb-5 text-center">
+      <div class="w-20 h-20 rounded-full bg-brand-100 text-brand-700 grid place-items-center text-2xl font-display font-bold mx-auto mb-3" id="avatar"></div>
+      <div class="font-display text-xl font-semibold" id="pname"></div>
+      <div class="text-sm text-grey-500" id="prole"></div>
+      <div class="flex items-center justify-center gap-2 mt-3 text-sm">
+        <span class="pill st-info" id="pbusiness"></span>
+      </div>
+    </div>
+
+    <div class="seg mb-4 w-full" id="seg" style="display:flex">
+      <button data-f="details" class="active flex-1">Details</button>
+      <button data-f="notifs" class="flex-1">Alerts</button>
+      <button data-f="certs" class="flex-1">Certificates</button>
+    </div>
+
+    <section id="pane-details" class="pane">
+      <div class="card p-5 mb-4">
+        <div class="font-display font-semibold mb-4">Your details</div>
+        <div class="space-y-4" id="detailForm"></div>
+        <button class="btn btn-primary btn-sm mt-4" onclick="UI.toast('Details saved')">Save changes</button>
+      </div>
+    </section>
+
+    <section id="pane-notifs" class="pane hidden">
+      <div class="card p-2 mb-4" id="notifToggles"></div>
+      <p class="text-xs text-grey-400 px-2">Turn these on to get a reminder on your device. You can change them any time.</p>
+    </section>
+
+    <section id="pane-certs" class="pane hidden">
+      <div class="space-y-3" id="certs"></div>
+    </section>
+
+    <button class="btn btn-danger big-btn w-full mt-6" onclick="location.href='login.html'">Sign out</button>
+    <div class="text-center text-xs text-grey-400 mt-4">Ballast for staff · prototype</div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF, me = S.me;
+    document.getElementById('avatar').textContent = me.initials;
+    document.getElementById('pname').textContent = me.name;
+    document.getElementById('prole').textContent = `${me.role} · ${me.site}`;
+    document.getElementById('pbusiness').innerHTML = `<span class="dot"></span>${me.business}`;
+
+    document.getElementById('detailForm').innerHTML = [
+      ['Full name', me.name, 'text'], ['Work email', me.email, 'email'],
+      ['Phone', me.phone, 'tel'], ['Role', me.role, 'text'],
+      ['Site', me.site, 'text'], ['Manager', me.manager, 'text']
+    ].map(([l,v,t])=>`<div><label class="label">${l}</label><input class="field" type="${t}" value="${v}"></div>`).join('');
+
+    const toggles = [
+      ['Push notifications', true], ['Task reminders', true], ['Training reminders', true],
+      ['Messages from managers', true], ['Rota updates', false], ['Weekly summary', false]
+    ];
+    document.getElementById('notifToggles').innerHTML = toggles.map(([l,on],i)=>`
+      <div class="flex items-center justify-between p-3 ${i<toggles.length-1?'border-b hairline':''}">
+        <span class="text-[15px] text-ink">${l}</span>
+        <div class="switch ${on?'on':''}" data-switch></div>
+      </div>`).join('');
+    document.querySelectorAll('[data-switch]').forEach(s=>s.onclick=()=>{ s.classList.toggle('on'); UI.toast('Preference updated'); });
+
+    const certs = S.learning.filter(l=>l.cert);
+    document.getElementById('certs').innerHTML = certs.map(l=>`
+      <div class="card p-4 flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-ok-bg text-ok grid place-items-center flex-none" style="background:#E7F3EE;color:#2C7358">${UI.icon('award','w-5 h-5')}</span>
+        <div class="flex-1 min-w-0"><div class="text-[15px] font-semibold leading-snug">${l.title}</div>
+          <div class="text-xs text-grey-500">${l.category} · earned via Ballast</div></div>
+        <button class="btn btn-quiet btn-sm" onclick="UI.toast('Downloading certificate')">${UI.icon('upload','w-4 h-4 rotate-180')}</button>
+      </div>`).join('') || `<div class="card p-8 text-center text-grey-500">Complete a module to earn your first certificate.</div>`;
+
+    document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
+      document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active',x===b));
+      document.querySelectorAll('.pane').forEach(p=>p.classList.add('hidden'));
+      document.getElementById('pane-'+b.dataset.f).classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

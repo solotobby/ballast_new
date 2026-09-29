@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body class="min-h-screen grid lg:grid-cols-2">
+  <!-- left: brand panel -->
+  <div class="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden" style="background:#0E1319">
+    <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full" style="background:radial-gradient(circle,#1F7DB4 0%,transparent 70%);opacity:.5"></div>
+    <div class="flex items-center gap-3 relative">
+      <div class="w-9 h-9 rounded-lg grid place-items-center" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0E1319" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v6a7 7 0 0 0 14 0V8"/></svg>
+      </div>
+      <span class="font-display text-xl font-semibold">Ballast</span>
+    </div>
+    <div class="relative max-w-md">
+      <h1 class="font-display text-4xl font-semibold leading-tight mb-4">Stay steady in choppy regulation.</h1>
+      <p class="text-[#9AA6B2] text-lg leading-relaxed">Ballast finds every rule that applies to your business, watches your status, and tells you what to do next — so compliance stops being a guessing game.</p>
+      <div class="flex gap-6 mt-10">
+        <div><div class="font-display text-2xl font-bold text-brand-300">16</div><div class="text-sm text-[#7C8794]">obligations tracked</div></div>
+        <div><div class="font-display text-2xl font-bold text-brand-300">2</div><div class="text-sm text-[#7C8794]">sites monitored</div></div>
+        <div><div class="font-display text-2xl font-bold text-brand-300">24/7</div><div class="text-sm text-[#7C8794]">monitoring</div></div>
+      </div>
+    </div>
+    <div class="text-sm text-[#5C6876] relative">UK SME compliance operating system</div>
+  </div>
+
+  <!-- right: form -->
+  <div class="flex flex-col items-center justify-center p-6 sm:p-12">
+    <div class="w-full max-w-sm">
+      <div class="lg:hidden flex items-center gap-3 mb-8">
+        <div class="w-9 h-9 rounded-lg grid place-items-center" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0E1319" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v6a7 7 0 0 0 14 0V8"/></svg>
+        </div>
+        <span class="font-display text-xl font-semibold">Ballast</span>
+      </div>
+      <h2 class="font-display text-2xl font-semibold text-ink mb-1">Welcome back</h2>
+      <p class="text-sm text-grey-500 mb-6">Sign in to your compliance workspace.</p>
+      <form id="loginForm" class="space-y-4">
+        <div><label class="label">Work email</label><input class="field" type="email" value="op@copperkettle.co" /></div>
+        <div><label class="label">Password</label><input class="field" type="password" value="prototype" /></div>
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 text-grey-600"><input type="checkbox" checked class="rounded" /> Keep me signed in</label>
+          <a href="forgot-password.html" class="text-brand-700 font-medium">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-full">Sign in</button>
+      </form>
+      <div class="text-center text-sm text-grey-500 mt-6">New to Ballast?
+        <a href="onboarding.html" class="text-brand-700 font-medium">Set up your business</a></div>
+      <div class="text-center text-sm text-grey-500 mt-2">Staff member? <a href="../staff/login.html" class="text-brand-700 font-medium">Open the staff app</a></div>
+    </div>
+    <div class="text-center text-xs text-grey-400 mt-5">Ballast team? <a href="../platform/login.html" class="text-grey-500 hover:text-brand-700 font-medium">Internal operator console</a></div>
+  </div>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const emailInput = form.querySelector('input[type="email"]');
+    const passwordInput = form.querySelector('input[type="password"]');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      if (!email || !password) return;
+
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in…';
+
+      try {
+        await BallastAPI.auth.signIn(email, password);
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        console.error('Sign in error:', err);
+        UI.toast(err.message || 'Invalid email or password', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    });
+  </script>
+</body>
+</html>

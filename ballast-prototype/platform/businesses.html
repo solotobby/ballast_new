@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tenants & Businesses · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="businesses">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">Ballast Operations</span>
+          <span class="text-slate-300">/</span>
+          <span>Tenant Fleet Management</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-slate-600 font-medium">UK Directory</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Registered Businesses</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Comprehensive roster of businesses, operating locations, employee headcounts, and live compliance health metrics.
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-sm" id="onboard">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Onboard New Business
+      </button>
+    </div>
+
+    <!-- Precision Filter Surface -->
+    <div class="card p-3 mb-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[240px]">
+          <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="bizSearch" class="field !pl-9 !py-1.5 !text-xs bg-slate-50/70 focus:bg-white font-medium" placeholder="Search by business name, manager, location, or council..." />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <select class="field !py-1.5 !text-xs font-mono max-w-[200px]" id="sectorSel"></select>
+          <span class="font-mono text-xs px-2.5 py-1 bg-slate-100 rounded-lg text-slate-600 font-semibold" id="count"></span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t hairline">
+        <span class="font-mono text-[10.5px] font-bold text-slate-400 uppercase tracking-wider pr-1">Fleet State:</span>
+        <div class="flex flex-wrap gap-1.5" id="statusFilters"></div>
+      </div>
+    </div>
+
+    <!-- Tenants Data Table -->
+    <div class="card overflow-hidden shadow-xs">
+      <div class="overflow-x-auto">
+        <table class="dtable">
+          <thead>
+            <tr>
+              <th class="w-1/3">Business &amp; Organization</th>
+              <th>Sector Category</th>
+              <th>Local Authority</th>
+              <th>Sites / Headcount</th>
+              <th>Tier Plan</th>
+              <th>Readiness Score</th>
+              <th>Status</th>
+              <th class="text-right">Lead Contact</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/platform-data.js?v=8"></script>
+  <script src="../assets/js/platform-layout.js?v=8"></script>
+  <script>
+    const P = window.PLATFORM;
+    document.getElementById('onboard').onclick = () => UI.toast('Opening tenant onboarding wizard', 'info');
+    const rc = r => r>=80?'#047857':r>=60?'#B45309':'#B91C1C';
+
+    const state = {
+      status: UI.param('filter')==='risk'?'risk':'all',
+      sector: 'all',
+      query: ''
+    };
+
+    const STATUSES = [
+      ['all','All Fleet'],
+      ['active','Active'],
+      ['trial','Trial'],
+      ['suspended','Suspended'],
+      ['risk','At Risk']
+    ];
+
+    const sectors = ['all', ...new Set(P.tenants.map(t=>t.sector))];
+    document.getElementById('sectorSel').innerHTML = sectors.map(s=>`<option value="${s}">${s==='all'?'All Sectors':s}</option>`).join('');
+    document.getElementById('sectorSel').value = state.sector;
+    document.getElementById('sectorSel').onchange = e => { state.sector=e.target.value; render(); };
+
+    document.getElementById('bizSearch').addEventListener('input', (e) => {
+      state.query = e.target.value.toLowerCase().trim();
+      render();
+    });
+
+    function statusPill(s){
+      const map = { active:'st-ok', trial:'st-due', suspended:'st-bad' };
+      const lbl = { active:'ACTIVE', trial:'TRIAL', suspended:'SUSPENDED' };
+      return `<span class="pill ${map[s]} !py-0.2 font-mono text-[10px]"><span class="dot"></span>${lbl[s]}</span>`;
+    }
+
+    function renderFilters(){
+      document.getElementById('statusFilters').innerHTML = STATUSES.map(([k,l]) =>
+        `<button class="btn-chip ${state.status===k?'active':''}" data-status="${k}">${l}</button>`).join('');
+      document.querySelectorAll('[data-status]').forEach(b=>b.onclick=()=>{state.status=b.dataset.status;render();});
+    }
+
+    function render(){
+      renderFilters();
+      let rows = P.tenants.filter(t => {
+        const matchStatus = state.status === 'all' ||
+          (state.status === 'risk' ? (t.readiness < 60 || t.status === 'suspended') : t.status === state.status);
+        const matchSector = state.sector === 'all' || t.sector === state.sector;
+        const matchQuery = !state.query ||
+          t.name.toLowerCase().includes(state.query) ||
+          t.manager.toLowerCase().includes(state.query) ||
+          t.council.toLowerCase().includes(state.query) ||
+          t.sector.toLowerCase().includes(state.query);
+        return matchStatus && matchSector && matchQuery;
+      });
+
+      document.getElementById('count').textContent = `${rows.length} of ${P.tenants.length} tenants`;
+
+      document.getElementById('rows').innerHTML = rows.map(t => `
+        <tr class="clickable group" onclick="location.href='business-detail.html?id=${t.id}'">
+          <td>
+            <div class="font-semibold text-ink group-hover:text-sky-700 transition">${t.name}</div>
+            <div class="text-[11px] font-mono text-slate-500 mt-0.5">CRN: ${t.id} · Onboarded ${t.joined || '2026'}</div>
+          </td>
+          <td><span class="auth-badge auth-fsa">${t.sector}</span></td>
+          <td class="text-slate-600 font-mono text-xs">${t.council}</td>
+          <td class="font-mono text-xs text-slate-700">${t.sites} sites · ${t.users} staff</td>
+          <td><span class="tier-tag !uppercase">${t.plan}</span></td>
+          <td>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-bold" style="color:${rc(t.readiness)}">${t.readiness}%</span>
+              <div class="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div class="h-full rounded-full" style="width:${t.readiness}%;background:${rc(t.readiness)}"></div>
+              </div>
+            </div>
+          </td>
+          <td>${statusPill(t.status)}</td>
+          <td class="text-right text-xs font-semibold text-slate-700">${t.manager}</td>
+        </tr>`).join('') || `<tr><td colspan="8" class="text-center font-mono text-xs text-slate-400 py-12">No tenants match the specified criteria.</td></tr>`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

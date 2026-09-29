@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Business · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="businesses">
+  <main class="content">
+    <a href="businesses.html" class="inline-flex items-center gap-1.5 text-sm text-grey-500 hover:text-ink mb-4"><span class="rotate-180">&#8594;</span> Back to businesses</a>
+    <div id="detail"></div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/platform-data.js?v=8"></script>
+  <script src="../assets/js/platform-layout.js?v=8"></script>
+  <script>
+    const P = window.PLATFORM;
+    let t = { ...(P.tenantById(UI.param('id')) || P.tenants[0]) };
+    const rc = r => r>=80?'#3E9E7A':r>=60?'#C0891F':'#C0503B';
+    const initials = t.name.split(' ').map(w=>w[0]).slice(0,3).join('');
+
+    const tickets = P.tickets.filter(x=>x.tenant===t.name);
+    const audits = P.audit.filter(a=>a.target.includes(t.name)||a.target.includes(t.id));
+
+    function statusPill(s){ const map={active:'st-ok',trial:'st-due',suspended:'st-bad'},lbl={active:'Active',trial:'Trial',suspended:'Suspended'};
+      return `<span class="pill ${map[s]}"><span class="dot"></span>${lbl[s]}</span>`; }
+
+    function render(){
+      const suspended = t.status==='suspended';
+      document.getElementById('detail').innerHTML = `
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div class="flex items-start gap-4">
+            <span class="w-14 h-14 rounded-2xl bg-brand-100 text-brand-700 grid place-items-center font-display text-lg font-bold">${initials}</span>
+            <div>
+              <div class="flex items-center gap-2 mb-1"><h1 class="font-display text-2xl font-semibold text-ink">${t.name}</h1>${statusPill(t.status)}</div>
+              <div class="text-sm text-grey-500">${t.id} · ${t.sector} · ${t.jurisdiction} · ${t.council}</div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn btn-ghost btn-sm" id="editBtn">${UI.icon('edit')}Edit profile</button>
+            <button class="btn btn-ghost btn-sm" id="manageBtn">${UI.icon('settings')}Manage</button>
+            <a class="btn btn-primary btn-sm" href="../pages/dashboard.html" id="viewAs">${UI.icon('eye')}View as business</a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+          ${[
+            ['Readiness', `<span style="color:${rc(t.readiness)}">${t.readiness}%</span>`],
+            ['Obligations', t.obligations],
+            ['Open alerts', `<span style="color:${t.alerts>5?'#C0503B':'#111418'}">${t.alerts}</span>`],
+            ['Sites', t.sites],['Users', t.users]
+          ].map(([l,v])=>`<div class="card p-4"><div class="font-display text-2xl font-bold tnum">${v}</div><div class="text-sm text-grey-500 mt-0.5">${l}</div></div>`).join('')}
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="card">
+              <div class="px-5 py-4 border-b hairline flex items-center justify-between">
+                <h2 class="font-display font-semibold">Compliance snapshot</h2>
+                <a href="../pages/obligations.html" class="text-sm text-brand-700 font-medium">Open their obligations</a>
+              </div>
+              <div class="p-5">
+                <div class="flex items-center gap-4 mb-4">
+                  <div class="flex-1"><div class="flex justify-between text-sm mb-1"><span class="text-grey-600">Overall readiness</span><span class="tnum font-semibold" style="color:${rc(t.readiness)}">${t.readiness}%</span></div>
+                    <div class="h-2.5 rounded-full bg-grey-100 overflow-hidden"><div class="h-full rounded-full" style="width:${t.readiness}%;background:${rc(t.readiness)}"></div></div></div>
+                </div>
+                <p class="text-sm text-grey-500">${suspended?'This account is suspended — the business currently has no access to their workspace.':`${t.obligations} obligations are tracked across ${t.sites} site${t.sites>1?'s':''}. ${t.alerts} item${t.alerts>1?'s need':' needs'} attention.`}</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="px-5 py-4 border-b hairline font-display font-semibold">Support tickets</div>
+              ${tickets.length? tickets.map(k=>`<a href="../platform/support.html" class="flex items-center gap-3 px-5 py-3.5 border-b hairline last:border-0 hover:bg-grey-50">
+                <span class="pill ${k.priority==='high'?'st-bad':k.priority==='medium'?'st-due':'st-na'} !py-0.5"><span class="dot"></span>${k.priority}</span>
+                <div class="flex-1 min-w-0"><div class="text-sm text-ink truncate">${k.subject}</div><div class="text-xs text-grey-500">${k.id} · ${k.assignee} · ${k.opened}</div></div>
+                <span class="pill ${k.status==='resolved'?'st-ok':k.status==='pending'?'st-due':'st-info'} !py-0.5">${k.status}</span></a>`).join('')
+                : `<div class="px-5 py-8 text-center text-sm text-grey-500">No support tickets.</div>`}
+            </div>
+
+            <div class="card">
+              <div class="px-5 py-4 border-b hairline font-display font-semibold">Governance history</div>
+              ${audits.length? audits.map(a=>`<div class="flex items-start gap-3 px-5 py-3 border-b hairline last:border-0">
+                <span class="w-7 h-7 rounded-full bg-grey-100 text-grey-600 grid place-items-center text-[10px] font-semibold flex-none mt-0.5">${a.actor.split(' ').map(w=>w[0]).slice(0,2).join('')}</span>
+                <div class="flex-1 min-w-0"><div class="text-sm text-ink"><span class="font-medium">${a.actor}</span> ${a.action.toLowerCase()}</div><div class="text-xs text-grey-500">${a.detail}</div></div>
+                <span class="text-xs text-grey-400 whitespace-nowrap">${a.ts}</span></div>`).join('')
+                : `<div class="px-5 py-8 text-center text-sm text-grey-500">No recorded actions for this tenant.</div>`}
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="card p-5">
+              <div class="font-display font-semibold mb-3">Account</div>
+              <dl class="space-y-3 text-sm">
+                ${[['Plan',`<span class="tier-tag">${t.plan}</span>`],['Status', statusPill(t.status)],['Account manager', t.am==='Unassigned'?'<span class="text-grey-400">Unassigned</span>':t.am],['Jurisdiction', t.jurisdiction],['Local authority', t.council],['Onboarded', UI.fmtDate(t.created)]]
+                  .map(([k,v])=>`<div class="flex justify-between gap-4 items-center"><dt class="text-grey-500">${k}</dt><dd class="text-ink font-medium text-right">${v}</dd></div>`).join('')}
+              </dl>
+            </div>
+
+            <div class="card p-5">
+              <div class="font-display font-semibold mb-3">Governance actions</div>
+              <div class="space-y-2">
+                <button class="btn btn-ghost btn-sm w-full justify-start" id="reassess">${UI.icon('obligations')}Re-run obligation assessment</button>
+                <button class="btn btn-ghost btn-sm w-full justify-start" id="planBtn">${UI.icon('flag')}Change plan</button>
+                <button class="btn btn-ghost btn-sm w-full justify-start" id="assignBtn">${UI.icon('users')}Assign account manager</button>
+                ${suspended
+                  ? `<button class="btn btn-ghost btn-sm w-full justify-start text-ok" id="toggleBtn">${UI.icon('check')}Reactivate account</button>`
+                  : `<button class="btn btn-ghost btn-sm w-full justify-start text-bad" id="toggleBtn">${UI.icon('close')}Suspend account</button>`}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      wire();
+    }
+
+    function wire(){
+      document.getElementById('viewAs').onclick = ()=> UI.toast('Opening '+t.name+' as an operator (impersonation logged)');
+      document.getElementById('editBtn').onclick = ()=>{
+        const body = `<div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="label">Trading name</label><input class="field" value="${t.name}"></div>
+          <div><label class="label">Sector</label><input class="field" value="${t.sector}"></div>
+          <div><label class="label">Jurisdiction</label><input class="field" value="${t.jurisdiction}"></div>
+          <div><label class="label">Local authority</label><input class="field" value="${t.council}"></div></div>`;
+        const m = UI.modal('Edit business profile', body, `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn btn-primary btn-sm" data-close id="sv">Save changes</button>`);
+        m.el.querySelector('#sv').onclick = ()=> UI.toast('Profile updated · change logged to audit');
+      };
+      document.getElementById('manageBtn').onclick = ()=> document.getElementById('planBtn').scrollIntoView({behavior:'smooth'});
+      document.getElementById('reassess').onclick = ()=> UI.toast('Re-running obligation assessment for '+t.name);
+      document.getElementById('planBtn').onclick = ()=>{
+        const opts = ['Starter','Growth','Scale'].map(p=>`<option ${p===t.plan?'selected':''}>${p}</option>`).join('');
+        const m = UI.modal('Change plan', `<label class="label">Plan</label><select class="field" id="pl">${opts}</select>`, `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn btn-primary btn-sm" id="sv">Update plan</button>`);
+        m.el.querySelector('#sv').onclick = ()=>{ t.plan=m.el.querySelector('#pl').value; m.close(); render(); UI.toast('Plan changed to '+t.plan); };
+      };
+      document.getElementById('assignBtn').onclick = ()=>{
+        const ams = ['Unassigned','T. Reeves','S. Ellis','Opeyemi O.'].map(a=>`<option ${a===t.am?'selected':''}>${a}</option>`).join('');
+        const m = UI.modal('Assign account manager', `<label class="label">Account manager</label><select class="field" id="am">${ams}</select>`, `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn btn-primary btn-sm" id="sv">Assign</button>`);
+        m.el.querySelector('#sv').onclick = ()=>{ t.am=m.el.querySelector('#am').value; m.close(); render(); UI.toast('Account manager set to '+t.am); };
+      };
+      document.getElementById('toggleBtn').onclick = ()=>{
+        const suspending = t.status!=='suspended';
+        const m = UI.modal(suspending?'Suspend account':'Reactivate account',
+          `<p class="text-sm text-grey-600">${suspending?`Suspending <b>${t.name}</b> immediately removes their access to the workspace. This is recorded in the audit log.`:`Reactivate <b>${t.name}</b> and restore access to their workspace?`}</p>`,
+          `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn ${suspending?'btn-danger':'btn-primary'} btn-sm" id="cf">${suspending?'Suspend':'Reactivate'}</button>`);
+        m.el.querySelector('#cf').onclick = ()=>{ t.status = suspending?'suspended':'active'; m.close(); render(); UI.toast(t.name+(suspending?' suspended':' reactivated')); };
+      };
+    }
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compliance Monitoring · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="monitoring">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Continuous Inspection Readiness</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-emerald-700 font-semibold">Active Sentinel</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Compliance Monitoring</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Real-time statutory status board tracking upcoming deadlines, expiry countdowns, and automated alerts before any duty falls non-compliant.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="reports.html" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          Export Schedule
+        </a>
+        <a href="logbook.html?new=true" class="btn btn-primary btn-sm">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Record Verification
+        </a>
+      </div>
+    </div>
+
+    <!-- Summary telemetry cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5" id="summary"></div>
+
+    <div class="grid lg:grid-cols-3 gap-5">
+      <!-- Status board -->
+      <div class="lg:col-span-2 card overflow-hidden">
+        <div class="px-5 py-3.5 border-b hairline bg-slate-50/70 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Statutory Urgency Board</h2>
+          </div>
+          <span class="font-mono text-[10.5px] text-slate-400">Ranked by days remaining</span>
+        </div>
+        <div id="board" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <!-- Active alerts -->
+      <div class="card overflow-hidden">
+        <div class="px-5 py-3.5 border-b hairline bg-slate-50/70 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Active Sentinel Alerts</h2>
+          </div>
+          <span class="pill st-bad !py-0.2 font-mono text-[10px]" id="alertCount"></span>
+        </div>
+        <div id="alerts" class="divide-y divide-slate-100"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script>
+    const B = window.BALLAST, c = B.counts();
+
+    const cards = [
+      ['Verified Met', c.ok, 'Duties currently satisfied', '#047857', 'border-l-emerald-500'],
+      ['Due within 30d', c.due, 'Renewals requiring action', '#B45309', 'border-l-amber-500'],
+      ['Statutory Breaches', c.overdue, 'Immediate liability risk', '#B91C1C', 'border-l-rose-500'],
+      ['Exempt Scope', c.na, 'Not applicable to sector', '#64748B', 'border-l-slate-400']
+    ];
+    document.getElementById('summary').innerHTML = cards.map(([l,v,sub,col,borderCls])=>`
+      <div class="card p-4 border-l-4 ${borderCls}">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-mono text-xs text-slate-500 font-semibold">${l}</span>
+          <span class="dot" style="background:${col}"></span>
+        </div>
+        <div class="font-display text-3xl font-extrabold tnum tracking-tight" style="color:${col}">${v}</div>
+        <div class="text-[11px] font-mono text-slate-400 mt-1">${sub}</div>
+      </div>`).join('');
+
+    function getAuthBadge(o) {
+      if (o.id.startsWith('OBL-001') || o.id.startsWith('OBL-002') || o.id.startsWith('OBL-003')) return '<span class="auth-badge auth-fsa">FSA</span>';
+      if (o.id.startsWith('OBL-005') || o.id.startsWith('OBL-006')) return '<span class="auth-badge auth-hse">HSE</span>';
+      if (o.id.startsWith('OBL-008')) return '<span class="auth-badge auth-gas">GAS SAFE</span>';
+      if (o.id.startsWith('OBL-011')) return '<span class="auth-badge auth-mcc">COUNCIL</span>';
+      return '<span class="auth-badge auth-ico">STATUTE</span>';
+    }
+
+    const order = { overdue:0, due:1, ok:2, na:3 };
+    const board = [...B.obligations].sort((a,b)=> order[a.status]-order[b.status] || (a.nextDue||'z').localeCompare(b.nextDue||'z'));
+    document.getElementById('board').innerHTML = board.map(o=>`
+      <a href="obligation-detail.html?id=${o.id}" class="flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 transition-colors group">
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-semibold text-ink group-hover:text-sky-700 transition truncate">${o.title}</div>
+          <div class="text-[11px] font-mono text-slate-500 mt-0.5 flex items-center gap-2">
+            <span>${o.id}</span>
+            <span>·</span>
+            ${getAuthBadge(o)}
+            <span>·</span>
+            <span>${o.owner}</span>
+          </div>
+        </div>
+        <div class="text-right flex-none">
+          <div class="text-xs font-mono font-bold ${o.status==='overdue'?'text-rose-600':o.status==='due'?'text-amber-700':'text-slate-700'}">${UI.fmtDate(o.nextDue)}</div>
+          <div class="mt-0.5">${UI.statusPill(o.status)}</div>
+        </div>
+      </a>`).join('');
+
+    document.getElementById('alertCount').textContent = B.alerts.length + ' active';
+    document.getElementById('alerts').innerHTML = B.alerts.map(a=>{
+      const map = { overdue:'st-bad', due:'st-due', evidence:'st-info', system:'st-na' };
+      return `<div class="p-4 hover:bg-slate-50 transition-colors">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="pill ${map[a.kind]||'st-na'} !py-0.2 font-mono text-[10px]">${a.kind.toUpperCase()}</span>
+          <span class="text-[11px] font-mono text-slate-400 ml-auto">${a.ts}</span>
+        </div>
+        <div class="text-xs font-bold text-ink leading-snug">${a.title}</div>
+        <div class="text-[11px] font-mono text-slate-500 mt-1">${a.meta}</div>
+      </div>`;
+    }).join('');
+  </script>
+</body>
+</html>

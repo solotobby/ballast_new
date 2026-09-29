@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String
+  name                String?
+  createdAt           DateTime             @default(now())
+  memberships         OrganisationUser[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Organisation {
+  id              String                     @id @default(cuid())
+  name            String
+  legalName       String?
+  companyNumber   String?
+  sicCode         String?
+  address         String?
+  jurisdiction    String?
+  council         String?
+  sector          String?
+  sizeBand        String?
+  siteCount       Int                        @default(1)
+  activities      Json?
+  extraNotes      String?                    @db.Text
+  onboardingStep  String                     @default("done")
+  createdAt       DateTime                   @default(now())
+  users           OrganisationUser[]
+  sites           Site[]
+  obligations     OrganisationObligation[]
+  logbook         LogbookEntry[]
+  evidence        EvidenceItem[]
+  shares          ShareGrant[]
+  invites         Invite[]
+  reports         StatutoryReport[]
+  formTemplates   ObligationFormTemplate[]
+  formSubmissions ObligationFormSubmission[]
+}
+
+model OrganisationUser {
+  id             String       @id @default(cuid())
+  organisationId String
+  userId         String
+  role           String
+  siteId         String?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site           Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, userId])
+  @@index([userId])
+  @@index([siteId])
+}
+
+model Site {
+  id             String             @id @default(cuid())
+  organisationId String
+  name           String
+  address        String?
+  postcode       String?
+  kind           String?
+  staffCount     Int                @default(0)
+  description    String?            @db.Text
+  organisation   Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  logbook        LogbookEntry[]
+  evidence       EvidenceItem[]
+  invites        Invite[]
+  members        OrganisationUser[]
+
+  @@index([organisationId])
+}
+
+model OrganisationObligation {
+  id             String       @id @default(cuid())
+  organisationId String
+  definitionId   String
+  title          String
+  category       String
+  basis          String
+  cadence        String
+  evidence       String
+  ownerRole      String
+  siteScope      String
+  status         String       @default("evidence_gap")
+  statusManual   Boolean      @default(false)
+  reviewState    String       @default("pending")
+  flagReason     String?      @db.Text
+  source         String       @default("rules")
+  rulesVersion   String
+  aiConfidence   String?
+  aiWhy          String?      @db.Text
+  lastEvidenceAt DateTime?
+  nextDueAt      DateTime?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  logbook        LogbookEntry[]
+  evidenceItems  EvidenceItem[]
+  formTemplate   ObligationFormTemplate?
+  formSubmissions ObligationFormSubmission[]
+
+  @@unique([organisationId, definitionId])
+  @@index([organisationId])
+}
+
+model LogbookEntry {
+  id             String                  @id @default(cuid())
+  organisationId String
+  siteId         String
+  obligationId   String?
+  type           String
+  category       String
+  description    String                  @db.Text
+  createdByName  String
+  createdAt      DateTime                @default(now())
+  organisation   Organisation            @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  site           Site                    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  obligation     OrganisationObligation? @relation(fields: [obligationId], references: [id], onDelete: SetNull)
+  evidence       EvidenceItem[]
+
+  @@index([organisationId, createdAt])
+}
+
+model EvidenceItem {
+  id             String                  @id @default(cuid())
+  organisationId String
+  obligationId   String?
+  logbookEntryId String?
+  siteId         String?
+  name           String
+  mimeType       String
+  sizeBytes      Int
+  storagePath    String
+  expiresAt      DateTime?
+  createdByName  String
+  createdAt      DateTime                @default(now())
+  organisation   Organisation            @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  obligation     OrganisationObligation? @relation(fields: [obligationId], references: [id], onDelete: SetNull)
+  logbookEntry   LogbookEntry?           @relation(fields: [logbookEntryId], references: [id], onDelete: SetNull)
+  site           Site?                   @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  @@index([organisationId, createdAt])
+}
+
+model Invite {
+  id             String       @id @default(cuid())
+  organisationId String
+  email          String
+  role           String
+  siteId         String?
+  status         String       @default("pending")
+  token          String?      @unique
+  sentAt         DateTime?
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  site           Site?        @relation(fields: [siteId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, email])
+  @@index([organisationId])
+}
+
+model ShareGrant {
+  id             String       @id @default(cuid())
+  organisationId String
+  token          String       @unique
+  title          String
+  obligationIds  Json
+  createdByName  String
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+}
+
+model StatutoryReport {
+  id             String       @id @default(cuid())
+  organisationId String
+  templateId     String
+  title          String
+  authority      String
+  kind           String
+  status         String
+  progress       Int          @default(0)
+  dueLabel       String?
+  blocker        String?      @db.Text
+  content        Json?
+  generatedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, createdAt])
+}
+
+model ObligationFormTemplate {
+  id                       String   @id @default(cuid())
+  organisationId           String
+  organisationObligationId String   @unique
+  definitionId             String
+  version                  Int      @default(1)
+  title                    String
+  purpose                  String?  @db.Text
+  schema                   Json
+  source                   String   @default("ai")
+  aiConfidence             String?
+  aiWhy                    String?  @db.Text
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  organisation             Organisation           @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  obligation               OrganisationObligation @relation(fields: [organisationObligationId], references: [id], onDelete: Cascade)
+  submissions              ObligationFormSubmission[]
+
+  @@index([organisationId])
+  @@index([definitionId])
+}
+
+model ObligationFormSubmission {
+  id               String   @id @default(cuid())
+  organisationId   String
+  obligationId     String
+  templateId       String
+  templateVersion  Int
+  answers          Json
+  status           String   @default("draft")
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  reviewNote       String?  @db.Text
+  evidenceItemIds  Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  organisation     Organisation             @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  obligation       OrganisationObligation   @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+  template         ObligationFormTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, obligationId])
+  @@index([status])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RegulatorySource {
+  id          String         @id @default(cuid())
+  name        String
+  code        String         @unique
+  portalUrl   String
+  frequency   String         @default("daily")
+  sector      String         @default("all")
+  status      String         @default("active")
+  rulesCount  Int            @default(0)
+  lastCrawlAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  crawls      ScraperCrawl[]
+}
+
+model ScraperCrawl {
+  id             String           @id @default(cuid())
+  sourceId       String
+  status         String           @default("running")
+  itemsFound     Int              @default(0)
+  itemsNew       Int              @default(0)
+  rawSnippet     String?          @db.MediumText
+  extractedItems Json?
+  errorLog       String?          @db.Text
+  durationMs     Int?
+  createdAt      DateTime         @default(now())
+  source         RegulatorySource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId])
+}
+
+model OpsAuditLog {
+  id         String   @id @default(cuid())
+  actorEmail String
+  action     String
+  targetType String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorEmail])
+  @@index([targetType, targetId])
+}

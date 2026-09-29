@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="support">
+  <main class="content">
+    <div class="mb-6">
+      <h1 class="font-display text-2xl font-semibold text-ink">Support queue</h1>
+      <p class="text-sm text-grey-500 mt-1">Requests from businesses across the platform.</p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-4" id="summary"></div>
+
+    <div class="card p-3 mb-4 flex flex-wrap items-center gap-1.5">
+      <div class="flex flex-wrap gap-1.5" id="statusFilters"></div>
+      <div class="ml-auto text-sm text-grey-500 tnum" id="count"></div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="dtable">
+        <thead><tr><th>Ticket</th><th>Business</th><th>Priority</th><th>Assignee</th><th>Opened</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/platform-data.js?v=8"></script>
+  <script src="../assets/js/platform-layout.js?v=8"></script>
+  <script>
+    const P = window.PLATFORM;
+    let tickets = P.tickets.map(t=>({...t}));
+    let filter = 'all';
+    const prioPill = { high:'st-bad', medium:'st-due', low:'st-na' };
+    const statPill = { open:'st-info', pending:'st-due', resolved:'st-ok' };
+
+    function summary(){
+      const s={open:0,pending:0,resolved:0}; tickets.forEach(t=>s[t.status]++);
+      document.getElementById('summary').innerHTML = [['Open',s.open,'#2E9BD6'],['Pending',s.pending,'#C0891F'],['Resolved',s.resolved,'#3E9E7A']]
+        .map(([l,v,c])=>`<div class="card p-4"><div class="flex items-center gap-2 mb-1"><span class="dot" style="background:${c}"></span><span class="text-sm text-grey-600">${l}</span></div><div class="font-display text-3xl font-bold tnum" style="color:${c}">${v}</div></div>`).join('');
+    }
+    const STATUSES = [['all','All'],['open','Open'],['pending','Pending'],['resolved','Resolved']];
+    function renderFilters(){
+      document.getElementById('statusFilters').innerHTML = STATUSES.map(([k,l])=>`<button class="btn-chip ${filter===k?'active':''}" data-s="${k}">${l}</button>`).join('');
+      document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{filter=b.dataset.s;render();});
+    }
+    function render(){
+      summary(); renderFilters();
+      const list = tickets.filter(t=>filter==='all'||t.status===filter);
+      document.getElementById('count').textContent = list.length+' of '+tickets.length;
+      document.getElementById('rows').innerHTML = list.map(t=>`
+        <tr>
+          <td><div class="text-sm text-ink max-w-md">${t.subject}</div><div class="text-xs text-grey-500 tnum">${t.id}</div></td>
+          <td class="text-grey-600 text-sm">${t.tenant}</td>
+          <td><span class="pill ${prioPill[t.priority]} !py-0.5"><span class="dot"></span>${t.priority}</span></td>
+          <td class="text-grey-600 text-sm">${t.assignee==='Unassigned'?'<span class="text-grey-400">Unassigned</span>':t.assignee}</td>
+          <td class="text-grey-500 text-sm">${t.opened}</td>
+          <td><span class="pill ${statPill[t.status]} !py-0.5"><span class="dot"></span>${t.status}</span></td>
+          <td class="text-right whitespace-nowrap">
+            ${t.assignee==='Unassigned'?`<button class="btn btn-ghost btn-sm" data-take="${t.id}">Assign to me</button>`:''}
+            ${t.status!=='resolved'?`<button class="btn btn-quiet btn-sm" data-resolve="${t.id}">Resolve</button>`:''}
+          </td>
+        </tr>`).join('') || `<tr><td colspan="7" class="text-center text-grey-500 py-10">No tickets.</td></tr>`;
+      document.querySelectorAll('[data-take]').forEach(b=>b.onclick=()=>{ tickets.find(x=>x.id===b.dataset.take).assignee='Opeyemi O.'; render(); UI.toast('Assigned '+b.dataset.take+' to you'); });
+      document.querySelectorAll('[data-resolve]').forEach(b=>b.onclick=()=>{ tickets.find(x=>x.id===b.dataset.resolve).status='resolved'; render(); UI.toast(b.dataset.resolve+' resolved'); });
+    }
+    render();
+  </script>
+</body>
+</html>

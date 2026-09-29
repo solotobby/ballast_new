@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard · Ballast Compliance OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="dashboard">
+  <main class="content">
+    <!-- Top Telemetry Header -->
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-7">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Hospitality &amp; Food</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-emerald-700 font-semibold flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Continuous Audit Active
+          </span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Are we covered right now?</h1>
+      </div>
+      
+      <!-- Action Toolbar -->
+      <div class="flex items-center gap-2">
+        <a href="reports.html" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Inspection Dossier
+        </a>
+        <a href="logbook.html?new=true" class="btn btn-primary btn-sm">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Record Entry
+        </a>
+      </div>
+    </div>
+
+    <!-- Cockpit Instrument Cluster -->
+    <div class="grid lg:grid-cols-3 gap-5 mb-5">
+      <!-- Readiness Gauge Card -->
+      <div class="card p-6 flex flex-col justify-between border-slate-200/90 shadow-sm relative overflow-hidden" style="background: linear-gradient(145deg, #FFFFFF 0%, #F8FBFE 100%)">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-mono text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">Statutory Gauge</span>
+          <span class="pill st-ok !text-[10px] !py-0.5">HEALTHY</span>
+        </div>
+
+        <div class="flex items-center gap-6 my-2">
+          <div class="ring-wrap flex-none">
+            <svg width="172" height="172" viewBox="0 0 172 172">
+              <defs>
+                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#38BDF8" />
+                  <stop offset="100%" stop-color="#0284C7" />
+                </linearGradient>
+              </defs>
+              <circle class="ring-track" cx="86" cy="86" r="76" fill="none" stroke-width="13" />
+              <circle class="ring-arc" id="ringArc" cx="86" cy="86" r="76" fill="none" stroke-width="13" stroke-dasharray="477.5" stroke-dashoffset="477.5" />
+            </svg>
+            <div class="ring-center">
+              <div class="font-display text-4xl font-extrabold text-ink tnum tracking-tight" id="ringPct">0%</div>
+              <div class="text-[10px] font-mono font-bold text-sky-700 uppercase tracking-widest mt-0.5">Readiness</div>
+            </div>
+          </div>
+
+          <div class="min-w-0 flex-1 space-y-1.5" id="readinessBreak"></div>
+        </div>
+
+        <!-- 16-Segment Obligation Bar -->
+        <div class="mt-4 pt-3 border-t hairline">
+          <div class="flex items-center justify-between font-mono text-[10.5px] text-slate-500 mb-1.5">
+            <span>16 STATUTORY CELLS</span>
+            <span class="text-slate-400">Hover cell to inspect</span>
+          </div>
+          <div class="duty-strip" id="dutyCells"></div>
+        </div>
+      </div>
+
+      <!-- Attention & Domain Breakdown Tiles -->
+      <div class="lg:col-span-2 grid sm:grid-cols-3 gap-4">
+        <div class="card card-interactive p-5 border-l-4 border-l-rose-500" id="tileOverdue"></div>
+        <div class="card card-interactive p-5 border-l-4 border-l-amber-500" id="tileDue"></div>
+        <div class="card card-interactive p-5 border-l-4 border-l-sky-500" id="tileEvidence"></div>
+        
+        <!-- Domain Breakdown -->
+        <div class="card p-5 sm:col-span-3">
+          <div class="flex items-center justify-between mb-3.5">
+            <div class="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider">Compliance by Regulatory Discipline</div>
+            <a href="obligations.html" class="font-mono text-[11px] text-sky-700 hover:underline font-semibold">VIEW ALL 16 DUTIES &rarr;</a>
+          </div>
+          <div id="tierBars" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deadlines & Priority Actions Grid -->
+    <div class="grid lg:grid-cols-2 gap-5 mb-5">
+      <!-- Upcoming Deadlines -->
+      <div class="card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b hairline bg-slate-50/70">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Upcoming Deadlines &amp; Filings</h2>
+          </div>
+          <a href="monitoring.html" class="font-mono text-[11px] text-sky-700 font-semibold hover:underline">CALENDAR &rarr;</a>
+        </div>
+        <div id="deadlines" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <!-- Priority Actions -->
+      <div class="card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b hairline bg-slate-50/70">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <h2 class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Engine Recommendations</h2>
+          </div>
+          <a href="insights.html" class="font-mono text-[11px] text-sky-700 font-semibold hover:underline">ALL INSIGHTS &rarr;</a>
+        </div>
+        <div id="priority" class="p-2 space-y-1"></div>
+      </div>
+    </div>
+
+    <!-- Live Audit Log & Activity Ledger -->
+    <div class="card overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b hairline bg-slate-50/70">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <h2 class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Live Statutory Audit Ledger</h2>
+        </div>
+        <a href="logbook.html" class="font-mono text-[11px] text-sky-700 font-semibold hover:underline">OPEN LOGBOOK &rarr;</a>
+      </div>
+      <div id="activity" class="divide-y divide-slate-100"></div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    const B = window.BALLAST;
+
+    function renderDashboard() {
+      const c = B.counts();
+
+      // Animated Gauge
+      const C = 477.5;
+      const arc = document.getElementById('ringArc');
+      if (arc) {
+        setTimeout(() => { arc.style.strokeDashoffset = C * (1 - c.readiness/100); }, 100);
+      }
+      let n = 0;
+      const t = setInterval(() => {
+        n += 2;
+        if (n >= c.readiness) { n = c.readiness; clearInterval(t); }
+        const pctEl = document.getElementById('ringPct');
+        if (pctEl) pctEl.textContent = n + '%';
+      }, 14);
+
+      document.getElementById('readinessBreak').innerHTML = `
+        <div class="flex items-center justify-between py-1 text-xs border-b hairline">
+          <span class="flex items-center gap-2 text-slate-600 font-medium"><span class="dot" style="background:#10B981"></span> Verified Met</span>
+          <span class="font-mono font-bold text-slate-900">${c.ok}</span>
+        </div>
+        <div class="flex items-center justify-between py-1 text-xs border-b hairline">
+          <span class="flex items-center gap-2 text-amber-700 font-medium"><span class="dot" style="background:#F59E0B"></span> Due (&lt;30d)</span>
+          <span class="font-mono font-bold text-amber-700">${c.due}</span>
+        </div>
+        <div class="flex items-center justify-between py-1 text-xs border-b hairline">
+          <span class="flex items-center gap-2 text-rose-700 font-medium"><span class="dot" style="background:#EF4444"></span> Overdue</span>
+          <span class="font-mono font-bold text-rose-700">${c.overdue}</span>
+        </div>
+        <div class="flex items-center justify-between py-1 text-xs">
+          <span class="flex items-center gap-2 text-slate-400 font-medium"><span class="dot" style="background:#94A3B8"></span> Exempt</span>
+          <span class="font-mono font-medium text-slate-400">${c.na}</span>
+        </div>`;
+
+      // 16-Segment Cell Strip
+      const dutyCells = document.getElementById('dutyCells');
+      dutyCells.innerHTML = B.obligations.map((o, idx) => {
+        const color = o.status === 'ok' ? '#10B981' : (o.status === 'due' ? '#F59E0B' : (o.status === 'overdue' ? '#EF4444' : '#CBD5E1'));
+        return `<div class="duty-cell" style="background:${color}" title="${o.id}: ${o.title} (${o.status.toUpperCase()})" onclick="location.href='obligation-detail.html?id=${o.id}'"></div>`;
+      }).join('');
+
+      function tile(el, val, label, subtext, kind, href){
+        const color = { bad:'#DC2626', due:'#D97706', info:'#0284C7' }[kind];
+        const icon = kind === 'bad' ? 'alert' : (kind === 'due' ? 'clock' : 'file');
+        el.innerHTML = `<a href="${href}" class="block group">
+          <div class="flex items-center justify-between">
+            <span class="font-display text-3xl font-extrabold tnum tracking-tight" style="color:${color}">${val}</span>
+            <span class="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-sky-50 group-hover:text-sky-600 transition grid place-items-center text-slate-400">
+              ${UI.icon(icon,'w-4 h-4')}
+            </span>
+          </div>
+          <div class="text-xs font-bold text-ink mt-2 group-hover:text-sky-700 transition">${label}</div>
+          <div class="text-[11px] font-mono text-slate-500 mt-0.5">${subtext}</div>
+        </a>`;
+      }
+
+      tile(document.getElementById('tileOverdue'), c.overdue, 'Overdue statutory duties', 'Breaches requiring immediate fix', 'bad', 'obligations.html?status=overdue');
+      tile(document.getElementById('tileDue'), c.due, 'Due within 30 days', 'Action required before inspection', 'due', 'obligations.html?status=due');
+      const expiring = B.evidence.filter(e => e.evState !== 'valid').length;
+      tile(document.getElementById('tileEvidence'), expiring, 'Certificates requiring renewal', 'Gas safety & ventilation records', 'info', 'evidence.html');
+
+      // Tier bars
+      document.getElementById('tierBars').innerHTML = B.tierList().map(tier => {
+        const items = B.obligations.filter(o => o.tier === tier && o.status !== 'na');
+        const met = items.filter(o => o.status === 'ok').length;
+        const pct = items.length ? Math.round(met/items.length*100) : 100;
+        return `<div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="font-semibold text-slate-700">${tier}</span>
+            <span class="font-mono text-slate-500 text-[11px] font-bold">${met}/${items.length} verified (${pct}%)</span>
+          </div>
+          <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-1000" style="width:${pct}%;background:linear-gradient(90deg,#38BDF8,#0284C7)"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Authority code helper
+      function getAuthBadge(obl) {
+        if (obl.id.startsWith('OBL-001') || obl.id.startsWith('OBL-002') || obl.id.startsWith('OBL-003')) return '<span class="auth-badge auth-fsa">FSA</span>';
+        if (obl.id.startsWith('OBL-005') || obl.id.startsWith('OBL-006')) return '<span class="auth-badge auth-hse">HSE</span>';
+        if (obl.id.startsWith('OBL-008')) return '<span class="auth-badge auth-gas">GAS SAFE</span>';
+        if (obl.id.startsWith('OBL-011')) return '<span class="auth-badge auth-mcc">COUNCIL</span>';
+        return '<span class="auth-badge auth-ico">STATUTORY</span>';
+      }
+
+      // Deadlines
+      const withDates = B.obligations.filter(o => o.nextDue && o.nextDue !== '—')
+        .sort((a,b) => new Date(a.nextDue) - new Date(b.nextDue)).slice(0, 5);
+      document.getElementById('deadlines').innerHTML = withDates.map(o => {
+        const overdue = new Date(o.nextDue) < new Date('2026-09-23');
+        return `<a href="obligation-detail.html?id=${o.id}" class="flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 transition-colors">
+          <span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center text-slate-500 flex-none">${UI.icon('clock','w-4 h-4')}</span>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-semibold text-ink truncate">${o.title}</div>
+            <div class="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2">
+              <span>${o.id}</span>
+              <span>·</span>
+              ${getAuthBadge(o)}
+            </div>
+          </div>
+          <div class="text-right flex-none">
+            <div class="text-xs font-mono font-bold ${overdue ? 'text-rose-600' : 'text-slate-700'} mb-0.5">${UI.fmtDate(o.nextDue)}</div>
+            ${UI.statusPill(o.status)}
+          </div>
+        </a>`;
+      }).join('');
+
+      // Priority actions
+      const order = { high: 0, med: 1, low: 2 };
+      const recs = [...B.recommendations].sort((a,b) => order[a.risk] - order[b.risk]).slice(0, 4);
+      document.getElementById('priority').innerHTML = recs.map(r => `
+        <a href="insights.html" class="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-200">
+          <span class="mt-0.5 flex-none">${UI.riskPill(r.risk)}</span>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-semibold text-ink leading-snug">${r.title}</div>
+            <div class="text-[11px] font-mono text-slate-500 mt-0.5">${r.obl}</div>
+          </div>
+          <span class="text-slate-300 mt-1">${UI.icon('arrowRight','w-3.5 h-3.5')}</span>
+        </a>`).join('');
+
+      // Activity
+      document.getElementById('activity').innerHTML = B.logEntries.slice(0, 5).map(l => `
+        <div class="flex items-center gap-3.5 px-5 py-3 hover:bg-slate-50 transition-colors">
+          <span class="pill st-info !py-0.5 font-mono text-[10.5px]">${l.type}</span>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-semibold text-ink truncate">${l.summary}</div>
+            <div class="text-[11px] font-mono text-slate-500 mt-0.5">${l.site} · Logged by ${l.author}</div>
+          </div>
+          <div class="text-xs font-mono text-slate-500 tnum whitespace-nowrap">${UI.fmtDate(l.date)}</div>
+        </div>`).join('');
+    }
+
+    async function loadLiveDashboard() {
+      try {
+        const [liveObligations, liveLogs] = await Promise.allSettled([
+          BallastAPI.obligations.list(),
+          BallastAPI.logbook.list()
+        ]);
+
+        if (liveObligations.status === 'fulfilled' && Array.isArray(liveObligations.value) && liveObligations.value.length > 0) {
+          B.obligations = liveObligations.value.map(o => ({
+            id: o.definitionId || o.id,
+            title: o.title,
+            tier: o.category === 'employment' ? 'Employment' : (o.category === 'data_cyber' ? 'Data & cyber' : (o.category === 'sector_licensing' ? 'Sector licensing' : 'Universal')),
+            status: o.status === 'on_track' ? 'ok' : (o.status === 'at_risk' ? 'due' : (o.status === 'overdue' ? 'overdue' : (o.status === 'evidence_gap' ? 'due' : 'na'))),
+            nextDue: o.nextDue || '2026-10-15',
+            owner: o.ownerRole || 'A. Mensah',
+            evidence: o.evidence || 'Certificate',
+            cadence: o.cadence || 'Annual',
+            source: o.source || 'Statutory requirement',
+            why: o.aiWhy || 'Statutory requirement for your business activities.'
+          }));
+        }
+
+        if (liveLogs.status === 'fulfilled' && Array.isArray(liveLogs.value) && liveLogs.value.length > 0) {
+          B.logEntries = liveLogs.value.map(l => ({
+            id: 'LOG-' + l.id.slice(-4).toUpperCase(),
+            type: l.type || 'Inspection',
+            date: l.createdAt ? l.createdAt.split('T')[0] : '2026-09-23',
+            site: l.site?.name || 'Main site',
+            author: l.createdByName || 'Operator',
+            obl: l.obligation?.definitionId || 'OBL-001',
+            summary: l.description || l.summary || l.type
+          }));
+        }
+
+        renderDashboard();
+      } catch (err) {
+        console.warn('Dashboard live sync note:', err.message);
+      }
+    }
+
+    renderDashboard();
+    loadLiveDashboard();
+  </script>
+</body>
+</html>

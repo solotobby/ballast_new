@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Task templates · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="templates">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <h1 class="font-display text-2xl font-semibold text-ink">Task templates</h1>
+        <p class="text-sm text-grey-500 mt-1">The assignable log, evidence and action templates staff use, tagged by sector and cadence. Edits here update every business in that sector.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" id="newTpl"></button>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4" id="summary"></div>
+
+    <div class="card p-3 mb-4 flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap gap-1.5" id="kindFilters"></div>
+      <div class="w-px h-6 bg-grey-200 mx-1 hidden sm:block"></div>
+      <select class="field !py-2 max-w-[200px]" id="sectorSel"></select>
+      <div class="ml-auto text-sm text-grey-500 tnum" id="count"></div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto"><table class="dtable">
+        <thead><tr><th>Template</th><th>Kind</th><th>Sector</th><th>Cadence</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/platform-data.js?v=8"></script>
+  <script src="../assets/js/platform-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF;
+    const lib = S.taskLibrary.map(t=>({...t}));
+    document.getElementById('newTpl').innerHTML = UI.icon('plus') + 'New template';
+    const scopeLabel = { universal:'Universal', 'data-cyber':'Data & cyber', employment:'Employment' };
+    const sectorLabel = k => scopeLabel[k] || (S.sectorLabel ? S.sectorLabel(k) : k);
+    const kindPill = { log:'st-due', evidence:'st-info', action:'st-bad' };
+
+    const state = { kind:'all', sector:'all' };
+    const KINDS = [['all','All'],['log','Logs'],['evidence','Evidence'],['action','Actions']];
+    const sectors = ['all', ...new Set(lib.map(t=>t.sector))];
+    document.getElementById('sectorSel').innerHTML = sectors.map(s=>`<option value="${s}">${s==='all'?'All sectors':sectorLabel(s)}</option>`).join('');
+    document.getElementById('sectorSel').onchange = e=>{ state.sector=e.target.value; render(); };
+
+    const byKind = {log:0,evidence:0,action:0}; lib.forEach(t=>byKind[t.kind]++);
+    document.getElementById('summary').innerHTML = [
+      ['Templates', lib.length, '#1F7DB4'],['Logs', byKind.log, '#C0891F'],['Evidence', byKind.evidence, '#155E88'],['Actions', byKind.action, '#C0503B']
+    ].map(([l,v,c])=>`<div class="card p-4"><div class="font-display text-3xl font-bold tnum" style="color:${c}">${v}</div><div class="text-sm text-grey-500 mt-0.5">${l}</div></div>`).join('');
+
+    function renderFilters(){
+      document.getElementById('kindFilters').innerHTML = KINDS.map(([k,l])=>
+        `<button class="btn-chip ${state.kind===k?'active':''}" data-k="${k}">${l}</button>`).join('');
+      document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{state.kind=b.dataset.k;render();});
+    }
+    function render(){
+      renderFilters();
+      const list = lib.filter(t=>(state.kind==='all'||t.kind===state.kind)&&(state.sector==='all'||t.sector===state.sector));
+      document.getElementById('count').textContent = list.length+' of '+lib.length;
+      document.getElementById('rows').innerHTML = list.map(t=>{
+        const m = S.typeMeta[t.type];
+        return `<tr class="clickable" data-edit="${t.id}">
+          <td><div class="flex items-center gap-2.5"><span class="w-8 h-8 rounded-lg grid place-items-center flex-none" style="background:${m.bg};color:${m.col}">${UI.icon(m.ic,'w-4 h-4')}</span>
+            <div><div class="font-medium text-ink">${t.title}</div><div class="text-xs text-grey-500 truncate max-w-md">${t.guidance}</div></div></div></td>
+          <td><span class="pill ${kindPill[t.kind]} !py-0.5"><span class="dot"></span>${t.kind}</span></td>
+          <td>${['universal','data-cyber','employment'].includes(t.sector)?`<span class="tier-tag">${sectorLabel(t.sector)}</span>`:`<span class="text-grey-600 text-sm">${sectorLabel(t.sector)}</span>`}</td>
+          <td class="text-grey-600 text-sm">${S.CADENCE[t.cadence]?S.CADENCE[t.cadence].label:t.cadence}</td>
+          <td class="text-right"><button class="btn btn-quiet btn-sm" data-edit="${t.id}">${UI.icon('edit','w-4 h-4')}</button></td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="5" class="text-center text-grey-500 py-10">No templates match these filters.</td></tr>`;
+      document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=(e)=>{ e.stopPropagation(); editTpl(el.dataset.edit); });
+    }
+
+    function editTpl(id){
+      const t = lib.find(x=>x.id===id);
+      const cadOpts = Object.keys(S.CADENCE).map(c=>`<option value="${c}" ${c===t.cadence?'selected':''}>${S.CADENCE[c].label}</option>`).join('');
+      const kindOpts = ['log','evidence','action'].map(k=>`<option ${k===t.kind?'selected':''}>${k}</option>`).join('');
+      const body = `<div class="grid sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2"><label class="label">Title</label><input class="field" id="e-title" value="${t.title.replace(/"/g,'&quot;')}"></div>
+        <div class="sm:col-span-2"><label class="label">Guidance shown to staff</label><textarea class="field" id="e-guide" rows="2">${t.guidance}</textarea></div>
+        <div><label class="label">Kind</label><select class="field" id="e-kind">${kindOpts}</select></div>
+        <div><label class="label">Cadence</label><select class="field" id="e-cad">${cadOpts}</select></div>
+        <div class="sm:col-span-2"><label class="label">Sector</label><input class="field" value="${sectorLabel(t.sector)}" disabled></div>
+      </div>`;
+      const m = UI.modal(id+' · Edit template', body, `<button class="btn btn-ghost btn-sm" data-close>Cancel</button><button class="btn btn-primary btn-sm" id="sv">Save template</button>`);
+      m.el.querySelector('#sv').onclick = ()=>{
+        t.title=m.el.querySelector('#e-title').value; t.guidance=m.el.querySelector('#e-guide').value;
+        t.kind=m.el.querySelector('#e-kind').value; t.cadence=m.el.querySelector('#e-cad').value;
+        m.close(); render(); UI.toast('Template updated · rolled out to '+sectorLabel(t.sector));
+      };
+    }
+    document.getElementById('newTpl').onclick = ()=> UI.toast('Opening new-template form');
+    render();
+  </script>
+</body>
+</html>

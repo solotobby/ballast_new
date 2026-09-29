@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Home · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="home" data-staff-title="Home">
+  <main class="staff-main">
+    <!-- sector switcher -->
+    <div class="card p-3 mb-4 flex items-center gap-3">
+      <span class="text-sm text-grey-500 flex items-center gap-1.5">Business sector</span>
+      <select class="field !py-2 ml-auto max-w-[230px]" id="sectorSel"></select>
+    </div>
+
+    <!-- decision-intelligence focus -->
+    <section id="focus" class="mb-5"></section>
+
+    <!-- quick actions -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="quick"></div>
+
+    <div class="grid-desktop-2">
+      <section class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-display text-lg font-semibold">To do now</h2>
+          <span class="text-sm text-grey-500" id="taskCount"></span>
+        </div>
+        <div class="card divide-y" id="tasks"></div>
+      </section>
+
+      <div>
+        <section class="mb-6">
+          <h2 class="font-display text-lg font-semibold mb-3">Coming up</h2>
+          <div class="card divide-y" id="week"></div>
+        </section>
+        <section class="mb-6" id="learnNudge"></section>
+      </div>
+    </div>
+
+    <section class="mb-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display text-lg font-semibold">Recent alerts</h2>
+        <a href="alerts.html" class="text-sm text-brand-700 font-medium">See all</a>
+      </div>
+      <div class="card overflow-hidden" id="alertPrev"></div>
+    </section>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF;
+    const tmeta = S.typeMeta;
+    let sector = S.getSector();
+    let tasks = [];   // current sector's assigned tasks (with local done state)
+
+    // ---- sector select ----
+    const sel = document.getElementById('sectorSel');
+    sel.innerHTML = S.SECTORS.map(s=>`<option value="${s.key}" ${s.key===sector?'selected':''}>${s.label}</option>`).join('');
+    sel.onchange = ()=>{ sector = sel.value; S.setSector(sector); loadSector(); };
+
+    function routeTask(t){
+      if(t.type==='training'){ location.href='learn.html'; return; }
+      if(t.kind==='action'){ UI.toast('Reminder set: '+t.title); return; }
+      location.href='log.html';
+    }
+
+    // ---- render focus + tasks + week for the sector ----
+    function loadSector(){
+      tasks = S.assignedTasks(sector).map(t=>({...t}));
+      renderFocus(); renderTasks(); renderWeek();
+    }
+
+    function renderFocus(){
+      const f = tasks.filter(t=>t.status!=='done').sort((a,b)=>a.when-b.when)[0];
+      const el = document.getElementById('focus');
+      if(!f){ el.innerHTML=''; return; }
+      const m = tmeta[f.type];
+      el.innerHTML = `
+        <div class="focus-card tap">
+          <div class="flex items-center gap-2 text-brand-300 text-xs font-semibold mb-3 relative">
+            ${UI.icon('sparkle','w-4 h-4')} Your focus right now
+          </div>
+          <div class="font-display text-xl font-semibold leading-snug mb-1.5 relative">${f.title}</div>
+          <p class="text-[15px] text-[#C3D2DE] leading-relaxed mb-4 relative">${f.guidance||'Tap to see what\u2019s needed.'}</p>
+          <div class="flex gap-2 relative">
+            <button class="btn btn-primary big-btn" id="focusAct">${UI.icon(m.ic)}${m.verb}</button>
+            <span class="btn big-btn text-white/90" style="background:rgba(255,255,255,.12)">${f.due}</span>
+          </div>
+        </div>`;
+      document.getElementById('focusAct').onclick = ()=> routeTask(f);
+    }
+
+    function renderTasks(){
+      const today = tasks.filter(t=>t.when===0);
+      const done = today.filter(t=>t.status==='done').length;
+      document.getElementById('taskCount').textContent = `${done} of ${today.length} done`;
+      document.getElementById('tasks').innerHTML = today.map(t=>{
+        const m = tmeta[t.type], isDone = t.status==='done';
+        return `<div class="flex items-center gap-3 p-4">
+          <button class="task-check ${isDone?'done':''}" data-toggle="${t.id}" aria-label="Mark done">${isDone?UI.icon('check','w-4 h-4'):''}</button>
+          <div class="flex-1 min-w-0" data-open="${t.id}">
+            <div class="text-[15px] font-medium ${isDone?'line-through text-grey-400':'text-ink'} leading-snug">${t.title}</div>
+            <div class="text-xs text-grey-500 mt-0.5 flex items-center gap-1.5"><span style="color:${m.col}">${UI.icon(m.ic,'w-3.5 h-3.5 inline')}</span>${t.kind}</div>
+          </div>
+        </div>`;
+      }).join('') || `<div class="p-6 text-center text-sm text-grey-500">Nothing scheduled for today.</div>`;
+      document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=(e)=>{
+        e.stopPropagation();
+        const t = tasks.find(x=>x.id===b.dataset.toggle);
+        t.status = t.status==='done'?'todo':'done';
+        renderTasks(); renderFocus();
+        if(t.status==='done') UI.toast('Nice — marked done');
+      });
+      document.querySelectorAll('[data-open]').forEach(d=>d.onclick=()=> routeTask(tasks.find(x=>x.id===d.dataset.open)));
+    }
+
+    function renderWeek(){
+      const week = tasks.filter(t=>t.when>0);
+      document.getElementById('week').innerHTML = week.map(t=>{
+        const m = tmeta[t.type];
+        return `<a href="javascript:void 0" data-open="${t.id}" class="flex items-center gap-3 p-4">
+          <span class="w-9 h-9 rounded-xl grid place-items-center flex-none" style="background:${m.bg};color:${m.col}">${UI.icon(m.ic,'w-4 h-4')}</span>
+          <div class="flex-1 min-w-0"><div class="text-[15px] font-medium text-ink leading-snug truncate">${t.title}</div>
+            <div class="text-xs text-grey-500">${t.due}</div></div>
+          ${UI.icon('chevron','w-4 h-4 text-grey-300')}
+        </a>`;
+      }).join('') || `<div class="p-6 text-center text-sm text-grey-500">Nothing coming up.</div>`;
+      document.querySelectorAll('#week [data-open]').forEach(a=>a.onclick=(e)=>{ e.preventDefault(); routeTask(tasks.find(x=>x.id===a.dataset.open)); });
+    }
+
+    // ---- static sections (not sector-specific) ----
+    const quick = [
+      ['logbook','New log entry','#1F7DB4','#E4F2FB','log.html'],
+      ['alert','Report a problem','#8A6412','#FBF1DC','log.html'],
+      ['list','Sector activities','#155E88','#E4F2FB','log.html#library'],
+      ['learn','Start training','#2C7358','#E7F3EE','learn.html']
+    ];
+    document.getElementById('quick').innerHTML = quick.map(([ic,label,col,bg,href])=>`
+      <a href="${href}" class="quick-action tap">
+        <span class="qa-ic" style="background:${bg};color:${col}">${UI.icon(ic,'w-5 h-5')}</span>
+        <span class="text-sm font-semibold leading-snug">${label}</span>
+      </a>`).join('');
+
+    const inProg = S.learning.find(l=>l.status==='in-progress') || S.learning.find(l=>l.status==='assigned');
+    if(inProg){
+      document.getElementById('learnNudge').innerHTML = `
+        <h2 class="font-display text-lg font-semibold mb-3">Keep learning</h2>
+        <a href="lesson.html?id=${inProg.id}" class="card p-4 block tap">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 grid place-items-center">${UI.icon('learn','w-5 h-5')}</span>
+            <div class="min-w-0"><div class="text-[15px] font-semibold leading-snug">${inProg.title}</div>
+              <div class="text-xs text-grey-500">${inProg.category} · ${inProg.minutes} min</div></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:${inProg.progress}%"></div></div>
+          <div class="text-xs text-grey-500 mt-1.5">${inProg.progress}% complete — pick up where you left off</div>
+        </a>`;
+    }
+
+    const nIcon = { training:'learn', task:'alert', message:'message', evidence:'file', shift:'calendar', system:'settings' };
+    const nCol = { training:['#2C7358','#E7F3EE'], task:['#8A6412','#FBF1DC'], message:['#155E88','#E4F2FB'], evidence:['#8F3527','#F8E7E2'], shift:['#155E88','#E4F2FB'], system:['#5A6675','#EEF2F6'] };
+    document.getElementById('alertPrev').innerHTML = S.notifications.slice(0,3).map(n=>{
+      const [c,bg]=nCol[n.kind];
+      return `<a href="alerts.html" class="notif ${n.unread?'unread':''}">
+        <span class="notif-ic" style="background:${bg};color:${c}">${UI.icon(nIcon[n.kind],'w-5 h-5')}</span>
+        <div class="min-w-0"><div class="text-[15px] font-medium text-ink leading-snug">${n.title}</div>
+          <div class="text-sm text-grey-500 leading-snug">${n.body}</div>
+          <div class="text-xs text-grey-400 mt-0.5">${n.ts}</div></div>
+      </a>`;
+    }).join('');
+
+    loadSector();
+  </script>
+</body>
+</html>

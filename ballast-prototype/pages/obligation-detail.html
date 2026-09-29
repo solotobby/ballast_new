@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Obligation · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="obligations">
+  <main class="content">
+    <a href="obligations.html" class="inline-flex items-center gap-1.5 text-sm text-grey-500 hover:text-ink mb-4">
+      <span class="rotate-180">&#8594;</span> Back to register</a>
+    <div id="detail"></div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script>
+    const B = window.BALLAST;
+    const o = B.oblById(UI.param('id')) || B.obligations[0];
+    const linkedEvidence = B.evidence.filter(e=>e.obl===o.id);
+    const linkedLogs = B.logEntries.filter(l=>l.obl===o.id);
+
+    const history = [
+      { date:'2026-09-01', label:'Status changed to Overdue', detail:'No current evidence on file past due date.' },
+      { date:'2025-09-02', label:'Marked Met', detail:'Assessment renewed, evidence uploaded.' },
+      { date:'2025-08-28', label:'Obligation identified', detail:'Applied from business profile (activities: food preparation).' }
+    ];
+
+    document.getElementById('detail').innerHTML = `
+      <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div class="max-w-2xl">
+          <div class="flex items-center gap-2 mb-2">${UI.tierTag(o.tier)} <span class="text-xs text-grey-500 tnum">${o.id}</span></div>
+          <h1 class="font-display text-2xl font-semibold text-ink">${o.title}</h1>
+          <div class="mt-2">${UI.statusPill(o.status)}</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm" id="markBtn">${UI.icon('check')}Mark reviewed</button>
+          <button class="btn btn-primary btn-sm" id="evBtn">${UI.icon('upload')}Add evidence</button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="card p-5">
+            <div class="text-sm font-semibold text-ink mb-2">Why this applies to you</div>
+            <p class="text-[15px] text-grey-700 leading-relaxed">${o.why}</p>
+            <div class="mt-3 flex items-center gap-2 text-sm text-grey-500">
+              ${UI.icon('file','w-4 h-4')} Source: <span class="text-grey-700">${o.source}</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="px-5 py-4 border-b hairline font-display font-semibold">Linked evidence</div>
+            ${linkedEvidence.length ? linkedEvidence.map(e=>`
+              <div class="flex items-center gap-3 px-5 py-3.5 border-b hairline last:border-0">
+                <span class="w-9 h-9 rounded-lg bg-grey-50 border hairline grid place-items-center text-grey-500">${UI.icon('file','w-4 h-4')}</span>
+                <div class="flex-1 min-w-0"><div class="text-sm font-medium truncate">${e.name}</div>
+                  <div class="text-xs text-grey-500">${e.type} · ${e.version} · expires ${UI.fmtDate(e.expiry)}</div></div>
+                ${UI.evPill(e.evState)}
+              </div>`).join('') : `<div class="px-5 py-8 text-center text-sm text-grey-500">No evidence on file yet. Add evidence to prove this obligation is met.</div>`}
+          </div>
+
+          <div class="card">
+            <div class="px-5 py-4 border-b hairline font-display font-semibold">Related log entries</div>
+            ${linkedLogs.length ? linkedLogs.map(l=>`
+              <div class="flex items-center gap-3 px-5 py-3.5 border-b hairline last:border-0">
+                <span class="pill st-info !py-0.5">${l.type}</span>
+                <div class="flex-1 min-w-0 text-sm text-ink truncate">${l.summary}</div>
+                <div class="text-xs text-grey-500 tnum">${UI.fmtDate(l.date)}</div>
+              </div>`).join('') : `<div class="px-5 py-8 text-center text-sm text-grey-500">No related log entries.</div>`}
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="card p-5">
+            <div class="text-sm font-semibold text-ink mb-3">Details</div>
+            <dl class="space-y-3 text-sm">
+              ${[['Jurisdiction',o.jurisdiction],['Evidence type',o.evidence],['Cadence',o.cadence],['Owner',o.owner],['Next due',UI.fmtDate(o.nextDue)]]
+                .map(([k,v])=>`<div class="flex justify-between gap-4"><dt class="text-grey-500">${k}</dt><dd class="text-ink font-medium text-right">${v}</dd></div>`).join('')}
+            </dl>
+          </div>
+
+          <div class="card p-5">
+            <div class="text-sm font-semibold text-ink mb-4">Status history</div>
+            <ol class="relative border-l border-grey-200 ml-1 space-y-5">
+              ${history.map(h=>`<li class="pl-4">
+                <span class="absolute -left-[5px] w-2.5 h-2.5 rounded-full bg-brand-400 border-2 border-white"></span>
+                <div class="text-sm font-medium text-ink">${h.label}</div>
+                <div class="text-xs text-grey-500 tnum mb-0.5">${UI.fmtDate(h.date)}</div>
+                <div class="text-xs text-grey-500">${h.detail}</div></li>`).join('')}
+            </ol>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('markBtn').onclick = ()=> UI.toast('Obligation marked as reviewed');
+    document.getElementById('evBtn').onclick = ()=> location.href='evidence.html';
+  </script>
+</body>
+</html>

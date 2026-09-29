@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Operational Logbook · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="logbook">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Immutable Ledger</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-slate-600 font-medium">Compliance Trail</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Operational Logbook</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Chronological, tamper-evident record of safety events, routine temperature checks, incident reports, and staff actions.
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-sm" id="newEntry">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Log Entry
+      </button>
+    </div>
+
+    <!-- Precision Filter Surface -->
+    <div class="card p-3 mb-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[240px]">
+          <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="logSearch" class="field !pl-9 !py-1.5 !text-xs bg-slate-50/70 focus:bg-white font-medium" placeholder="Search by incident summary, author, linked obligation, or log ID..." />
+        </div>
+        <span class="font-mono text-xs px-2.5 py-1 bg-slate-100 rounded-lg text-slate-600 font-semibold" id="count"></span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t hairline">
+        <span class="font-mono text-[10.5px] font-bold text-slate-400 uppercase tracking-wider pr-1">Action Type:</span>
+        <div id="typeFilters" class="flex flex-wrap gap-1.5"></div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card overflow-hidden shadow-xs">
+      <div class="overflow-x-auto">
+        <table class="dtable">
+          <thead>
+            <tr>
+              <th class="w-2/5">Incident / Log Summary</th>
+              <th>Category</th>
+              <th>Operating Site</th>
+              <th>Logged By</th>
+              <th>Linked Duty</th>
+              <th class="text-right">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    const B = window.BALLAST;
+    const entries = [...B.logEntries];
+    let filter = 'all';
+    let query = '';
+    let types = ['all', ...new Set(entries.map(e=>e.type))];
+
+    function renderFilters(){
+      types = ['all', ...new Set(entries.map(e=>e.type))];
+      document.getElementById('typeFilters').innerHTML = types.map(t=>
+        `<button class="btn-chip ${filter===t?'active':''}" data-t="${t}">${t==='all'?'All Events':t}</button>`).join('');
+      document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{filter=b.dataset.t;render();});
+    }
+
+    document.getElementById('logSearch').addEventListener('input', (e) => {
+      query = e.target.value.toLowerCase().trim();
+      render();
+    });
+
+    function render(){
+      renderFilters();
+      const rows = entries.filter(e => {
+        const matchType = filter === 'all' || e.type === filter;
+        const matchQuery = !query ||
+          e.summary.toLowerCase().includes(query) ||
+          e.id.toLowerCase().includes(query) ||
+          e.author.toLowerCase().includes(query) ||
+          e.site.toLowerCase().includes(query) ||
+          e.obl.toLowerCase().includes(query);
+        return matchType && matchQuery;
+      });
+
+      document.getElementById('count').textContent = `${rows.length} entries`;
+      document.getElementById('rows').innerHTML = rows.map(l=>`
+        <tr class="group">
+          <td>
+            <div class="text-xs font-semibold text-ink group-hover:text-sky-700 transition leading-snug">${l.summary}</div>
+            <div class="text-[11px] font-mono text-slate-400 mt-0.5">${l.id}</div>
+          </td>
+          <td><span class="pill st-info !py-0.2 font-mono text-[10.5px]">${l.type}</span></td>
+          <td class="text-slate-600 text-xs font-medium">${l.site}</td>
+          <td class="text-slate-700 text-xs font-semibold">${l.author}</td>
+          <td>
+            <a href="obligation-detail.html?id=${l.obl}" class="font-mono text-xs text-sky-700 hover:underline font-bold bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200/80">
+              ${l.obl}
+            </a>
+          </td>
+          <td class="font-mono text-xs text-slate-700 text-right whitespace-nowrap">${UI.fmtDate(l.date)}</td>
+        </tr>`).join('') || `<tr><td colspan="6" class="text-center font-mono text-xs text-slate-400 py-12">No logbook records found matching filters.</td></tr>`;
+    }
+    render();
+
+    async function loadLiveLogs() {
+      try {
+        const live = await BallastAPI.logbook.list();
+        if (Array.isArray(live) && live.length > 0) {
+          entries.length = 0;
+          live.forEach(l => {
+            entries.push({
+              id: 'LOG-' + l.id.slice(-4).toUpperCase(),
+              type: l.type,
+              date: l.createdAt ? l.createdAt.split('T')[0] : '2026-09-23',
+              site: l.site?.name || 'Main site',
+              author: l.createdByName || 'A. Mensah',
+              obl: l.obligation?.definitionId || 'OBL-001',
+              summary: l.description || l.summary || l.type
+            });
+          });
+          render();
+        }
+      } catch (err) {
+        console.warn('Logbook using local data:', err.message);
+      }
+    }
+    loadLiveLogs();
+
+    // Check if URL has ?new=true to open modal automatically
+    if (new URLSearchParams(location.search).get('new')) {
+      setTimeout(() => openNewModal(), 100);
+    }
+
+    document.getElementById('newEntry').onclick = openNewModal;
+
+    function openNewModal() {
+      const oblOpts = B.obligations.map(o=>`<option value="${o.id}">${o.id} — ${o.title}</option>`).join('');
+      const siteOpts = B.business.sites.map(s=>`<option>${s.name}</option>`).join('') + '<option>All sites</option>';
+      const typeOpts = ['Fire incident','Inspection','Electrical inspection','Challenge 25 refusal','Suspected food poisoning','Near-miss','Training']
+        .map(t=>`<option>${t}</option>`).join('');
+      const body = `
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="label">Entry type</label><select class="field !py-2 text-xs" id="f-type">${typeOpts}</select></div>
+          <div><label class="label">Date</label><input type="date" class="field !py-2 text-xs font-mono" id="f-date" value="2026-09-23"></div>
+          <div><label class="label">Operating site</label><select class="field !py-2 text-xs" id="f-site">${siteOpts}</select></div>
+          <div><label class="label">Linked statutory duty</label><select class="field !py-2 text-xs font-mono" id="f-obl">${oblOpts}</select></div>
+        </div>
+        <div class="mt-4"><label class="label">Observation details</label>
+          <textarea class="field text-xs" id="f-sum" rows="3" placeholder="Describe the findings, remedial measures, or incident details…"></textarea></div>
+        <div class="mt-4"><label class="label">Attachment evidence (optional)</label>
+          <div class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center text-xs text-slate-500 bg-slate-50 hover:bg-slate-100/60 transition cursor-pointer">
+            ${UI.icon('upload','w-5 h-5 mx-auto mb-1 text-slate-400')}Drag inspection photo or test slip here
+          </div>
+        </div>`;
+      const footer = `<button class="btn btn-ghost btn-sm" data-close>Cancel</button>
+        <button class="btn btn-primary btn-sm" id="saveEntry">${UI.icon('check','w-3.5 h-3.5')}Save Entry to Ledger</button>`;
+      const m = UI.modal('New Operational Log Entry', body, footer);
+      m.el.querySelector('#saveEntry').onclick = async () => {
+        const type = m.el.querySelector('#f-type').value;
+        const site = m.el.querySelector('#f-site').value;
+        const obl  = m.el.querySelector('#f-obl').value;
+        const sum  = m.el.querySelector('#f-sum').value || '(Routine compliance verification logged)';
+        const date = m.el.querySelector('#f-date').value || '2026-09-23';
+
+        const saveBtn = m.el.querySelector('#saveEntry');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving to database…';
+
+        try {
+          const sitesRes = await BallastAPI.organisations.listSites().catch(() => []);
+          const targetSite = sitesRes.find(s => s.name === site) || sitesRes[0];
+          const siteId = targetSite ? targetSite.id : 'cmt5m6nuu00054p5ckia2cq0p';
+
+          await BallastAPI.logbook.create({
+            type,
+            category: type,
+            description: sum,
+            siteId,
+          });
+          UI.toast('Log entry recorded to immutable register', 'success');
+        } catch (err) {
+          console.warn('API save fallback:', err);
+          UI.toast('Saved log entry locally', 'info');
+        }
+
+        entries.unshift({ id:'LOG-'+Math.floor(2000 + Math.random()*8000), type, date, site, author:'A. Mensah', obl, summary:sum });
+        m.close();
+        render();
+      };
+    }
+  </script>
+</body>
+</html>

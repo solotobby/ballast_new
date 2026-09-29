@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · Ballast Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body style="background:#0E1319;min-height:100vh" class="grid place-items-center p-6">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-12 h-12 rounded-xl grid place-items-center mx-auto mb-4" style="background:linear-gradient(150deg,#7FCBF0,#1F7DB4)">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#0E1319" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v6a7 7 0 0 0 14 0V8"/></svg>
+      </div>
+      <div class="font-display text-xl font-semibold text-white">Ballast <span class="text-brand-300">Platform</span></div>
+      <div class="text-sm text-[#7C8794] mt-1">Internal operator console · Ballast staff only</div>
+    </div>
+
+    <div class="card p-6">
+      <form id="form" class="space-y-4">
+        <div><label class="label">Ballast email</label><input class="field" type="email" value="op@ballast.app"></div>
+        <div><label class="label">Password</label><input class="field" type="password" value="prototype"></div>
+        <div class="flex items-center gap-2 p-3 rounded-lg bg-grey-50 text-sm text-grey-600">
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-grey-500">Hardware token or SSO</span>
+          <a href="forgot-password.html" class="text-brand-600 hover:underline font-medium">Forgot password?</a>
+        </div>
+        <button class="btn btn-primary btn-lg w-full">Continue with SSO</button>
+      </form>
+    </div>
+    <div class="text-center text-xs text-[#5C6876] mt-5">Access is logged. Two-factor authentication required.</div>
+    <div class="text-center text-sm text-[#7C8794] mt-3"><a href="../pages/login.html" class="text-brand-300">Business owner sign-in</a></div>
+  </div>
+
+  <script src="../assets/js/ui.js"></script>
+  <script>
+    document.querySelector('.bg-grey-50').innerHTML = UI.icon('shield','w-5 h-5 text-brand-600 flex-none') + '<span>Protected area. Actions here are recorded in the audit log.</span>';
+    document.getElementById('form').addEventListener('submit', e=>{ e.preventDefault(); location.href='dashboard.html'; });
+  </script>
+</body>
+</html>

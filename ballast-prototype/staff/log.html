@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Log · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="log" data-staff-title="Log">
+  <main class="staff-main">
+    <!-- sector switcher -->
+    <div class="card p-3 mb-4 flex items-center gap-3">
+      <span class="text-sm text-grey-500">Business sector</span>
+      <select class="field !py-2 ml-auto max-w-[230px]" id="sectorSel"></select>
+    </div>
+
+    <button class="btn btn-primary big-btn w-full mb-5 tap" id="newEntry"></button>
+
+    <h2 class="font-display text-lg font-semibold mb-2">Your recent entries</h2>
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-2 -mx-1 px-1" id="typeChips"></div>
+    <div class="space-y-3 mb-9" id="feed"></div>
+
+    <!-- sector activity library -->
+    <section id="library" class="scroll-mt-20">
+      <h2 class="font-display text-lg font-semibold">Compliance activities for your sector</h2>
+      <p class="text-sm text-grey-500 mt-1 mb-3">Assignable, recurring templates for <span id="secName" class="font-medium text-ink"></span>. Switch sector above to see a different set. Universal, data &amp; cyber and employment activities apply to every business.</p>
+      <div class="seg mb-4" id="libSeg">
+        <button data-k="log" class="active">Logs</button>
+        <button data-k="evidence">Evidence</button>
+        <button data-k="action">Actions</button>
+      </div>
+      <div class="space-y-3" id="libList"></div>
+    </section>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF, B = window.BALLAST, tmeta = S.typeMeta;
+    document.getElementById('newEntry').innerHTML = UI.icon('plus') + 'New log entry';
+    let sector = S.getSector();
+    let libKind = 'log';
+    let entries = S.myLog.map(e=>({...e})).sort((a,b)=> new Date(b.date)-new Date(a.date));
+    let feedFilter = 'all';
+
+    // ---- sector select ----
+    const sel = document.getElementById('sectorSel');
+    sel.innerHTML = S.SECTORS.map(s=>`<option value="${s.key}" ${s.key===sector?'selected':''}>${s.label}</option>`).join('');
+    sel.onchange = ()=>{ sector = sel.value; S.setSector(sector); renderLibrary(); };
+
+    // ---- my recent entries feed ----
+    const typeCol = (t)=>{
+      if(/fire|near|refus|incident|safeguard|defect|riddor/i.test(t)) return ['#8F3527','#F8E7E2'];
+      if(/clean|temp|delivery|check|inspection|plant|scaffold/i.test(t)) return ['#155E88','#E4F2FB'];
+      if(/train/i.test(t)) return ['#2C7358','#E7F3EE'];
+      return ['#5A6675','#EEF2F6'];
+    };
+    function chips(){
+      const types = ['all', ...new Set(entries.map(e=>e.type))];
+      document.getElementById('typeChips').innerHTML = types.map(t=>
+        `<button class="btn-chip ${feedFilter===t?'active':''} whitespace-nowrap flex-none" data-t="${t}">${t==='all'?'All':t}</button>`).join('');
+      document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{feedFilter=b.dataset.t;renderFeed();});
+    }
+    function renderFeed(){
+      chips();
+      const list = entries.filter(e=>feedFilter==='all'||e.type===feedFilter);
+      document.getElementById('feed').innerHTML = list.map(e=>{
+        const [c,bg]=typeCol(e.type);
+        const obl = B.oblById ? B.oblById(e.obl) : null;
+        return `<a href="log-entry.html?id=${e.id}" class="card p-4 flex gap-3 tap block">
+          <span class="w-10 h-10 rounded-xl grid place-items-center flex-none" style="background:${bg};color:${c}">${UI.icon('logbook','w-5 h-5')}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5"><span class="pill st-info !py-0.5">${e.type}</span>
+              <span class="text-xs text-grey-400 tnum ml-auto">${UI.fmtDate(e.date)}</span></div>
+            <div class="text-[15px] text-ink leading-snug">${e.summary}</div>
+            ${obl?`<div class="text-xs text-grey-500 mt-1">Linked to ${e.obl} · ${obl.title}</div>`:''}
+          </div>
+        </a>`;
+      }).join('') || `<div class="card p-8 text-center text-grey-500">No entries of this type yet.</div>`;
+    }
+
+    // ---- new entry (types from the sector library) ----
+    function openNewEntry(preTitle){
+      const logTypes = S.logTypesForSector(sector);
+      const typeOpts = logTypes.map(t=>`<option ${t===preTitle?'selected':''}>${t}</option>`).join('');
+      const oblOpts = B.obligations.map(o=>`<option value="${o.id}">${o.id} — ${o.title}</option>`).join('');
+      const body = `
+        <div class="space-y-4">
+          <div><label class="label">What kind of entry?</label><select class="field" id="f-type">${typeOpts}</select></div>
+          <div><label class="label">What happened?</label>
+            <textarea class="field" id="f-sum" rows="3" placeholder="Describe it in your own words…"></textarea></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="label">Date</label><input type="date" class="field" id="f-date" value="2026-09-23"></div>
+            <div><label class="label">Relates to</label><select class="field" id="f-obl">${oblOpts}</select></div>
+          </div>
+          <div><label class="label">Add a photo (optional)</label>
+            <div class="border-2 border-dashed border-grey-200 rounded-xl p-4 text-center text-sm text-grey-500">
+              ${UI.icon('upload','w-5 h-5 mx-auto mb-1 text-grey-400')}Tap to add a photo from your device</div></div>
+        </div>`;
+      const footer = `<button class="btn btn-ghost btn-sm" data-close>Cancel</button>
+        <button class="btn btn-primary btn-sm" id="save">${UI.icon('check')}Save entry</button>`;
+      const m = UI.modal('New log entry', body, footer);
+      m.el.querySelector('#save').onclick = ()=>{
+        entries.unshift({ id:'LOG-'+(2050+entries.length), type:m.el.querySelector('#f-type').value,
+          date:m.el.querySelector('#f-date').value||'2026-09-23',
+          summary:m.el.querySelector('#f-sum').value||'(no description)', obl:m.el.querySelector('#f-obl').value });
+        m.close(); feedFilter='all'; renderFeed(); UI.toast('Log entry saved');
+      };
+    }
+    document.getElementById('newEntry').onclick = ()=> openNewEntry();
+
+    // ---- sector library browser ----
+    document.querySelectorAll('#libSeg button').forEach(b=>b.onclick=()=>{
+      libKind=b.dataset.k;
+      document.querySelectorAll('#libSeg button').forEach(x=>x.classList.toggle('active',x===b));
+      renderLibrary();
+    });
+
+    function renderLibrary(){
+      sel.value = sector;
+      document.getElementById('secName').textContent = S.sectorLabel(sector);
+      const items = S.libraryFor(sector).filter(t=>t.kind===libKind);
+      document.getElementById('libList').innerHTML = items.map(t=>{
+        const m = tmeta[t.type];
+        const cad = S.CADENCE[t.cadence];
+        const scope = ['universal','data-cyber','employment'].includes(t.sector)
+          ? {'universal':'Universal','data-cyber':'Data & cyber','employment':'Employment'}[t.sector] : null;
+        return `<div class="card p-4 flex gap-3">
+          <span class="w-10 h-10 rounded-xl grid place-items-center flex-none" style="background:${m.bg};color:${m.col}">${UI.icon(m.ic,'w-5 h-5')}</span>
+          <div class="flex-1 min-w-0">
+            <div class="flex flex-wrap items-center gap-1.5 mb-1">
+              <span class="tier-tag">${cad.label}</span>
+              ${scope?`<span class="tier-tag">${scope}</span>`:''}
+            </div>
+            <div class="text-[15px] font-semibold text-ink leading-snug">${t.title}</div>
+            <div class="text-sm text-grey-500 leading-snug mt-0.5">${t.guidance}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm self-start whitespace-nowrap" data-do="${t.id}" data-kind="${t.kind}" data-title="${t.title.replace(/"/g,'&quot;')}">${m.verb}</button>
+        </div>`;
+      }).join('') || `<div class="card p-8 text-center text-grey-500">No ${libKind} templates for this sector.</div>`;
+
+      document.querySelectorAll('[data-do]').forEach(btn=>btn.onclick=()=>{
+        const kind = btn.dataset.kind, title = btn.dataset.title;
+        if(kind==='log') openNewEntry(title);
+        else if(kind==='evidence') UI.toast('Reminder set to collect: '+title);
+        else UI.toast('Scheduled: '+title);
+      });
+    }
+
+    renderFeed();
+    renderLibrary();
+    if(location.hash==='#library') document.getElementById('library').scrollIntoView();
+  </script>
+</body>
+</html>

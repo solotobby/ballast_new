@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statutory Obligations Register · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="obligations">
+  <main class="content">
+    <!-- Header with Telemetry Metadata -->
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Statutory Authority Matrix</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-slate-600 font-medium">UK Legislation</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Obligations Register</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Authoritative duties mapped directly from UK statutory bodies for food &amp; hospitality. Continuously verified against scraped government directives.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="exportCsvBtn" class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-primary btn-sm" id="reassessBtn">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Re-evaluate Engine
+        </button>
+      </div>
+    </div>
+
+    <!-- Precision Filter & Search Surface -->
+    <div class="card p-3 mb-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Search -->
+        <div class="relative flex-1 min-w-[240px]">
+          <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="tableSearch" class="field !pl-9 !py-1.5 !text-xs bg-slate-50/70 focus:bg-white font-medium" placeholder="Search by duty name, regulatory ID (e.g. OBL-001), or regulator..." />
+        </div>
+
+        <!-- Metric badges -->
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-600 font-semibold" id="resultCount">16 total</span>
+          <span class="hidden sm:inline-flex px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10.5px] font-bold border border-emerald-200">13 VERIFIED</span>
+          <span class="hidden sm:inline-flex px-2 py-0.5 rounded bg-rose-50 text-rose-700 text-[10.5px] font-bold border border-rose-200">1 BREACH</span>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t hairline">
+        <span class="font-mono text-[10.5px] font-bold text-slate-400 uppercase tracking-wider pr-1">Status:</span>
+        <div class="flex flex-wrap gap-1.5" id="statusFilters"></div>
+
+        <div class="w-px h-5 bg-slate-200 mx-1.5 hidden sm:block"></div>
+
+        <span class="font-mono text-[10.5px] font-bold text-slate-400 uppercase tracking-wider pr-1">Area:</span>
+        <div class="flex flex-wrap gap-1.5" id="tierFilters"></div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card overflow-hidden shadow-xs">
+      <div class="overflow-x-auto">
+        <table class="dtable">
+          <thead>
+            <tr>
+              <th class="w-2/5">Obligation &amp; Legal Authority</th>
+              <th>Discipline</th>
+              <th>Jurisdiction</th>
+              <th>Accountable Lead</th>
+              <th>Next Filing / Audit</th>
+              <th class="text-right">Compliance Status</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    const B = window.BALLAST;
+    const state = {
+      status: UI.param('status') || 'all',
+      tier: 'all',
+      query: ''
+    };
+
+    async function loadLiveObligations() {
+      try {
+        const live = await BallastAPI.obligations.list();
+        if (Array.isArray(live) && live.length > 0) {
+          B.obligations = live.map(o => ({
+            id: o.definitionId || o.id,
+            title: o.title,
+            tier: o.category === 'employment' ? 'Employment' : (o.category === 'data_cyber' ? 'Data & cyber' : (o.category === 'sector_licensing' ? 'Sector licensing' : 'Universal')),
+            status: o.status === 'on_track' ? 'ok' : (o.status === 'at_risk' ? 'due' : (o.status === 'overdue' ? 'overdue' : (o.status === 'evidence_gap' ? 'due' : 'na'))),
+            nextDue: o.nextDue || '—',
+            owner: o.ownerRole || 'A. Mensah',
+            evidence: o.evidence || 'Certificate',
+            cadence: o.cadence || 'Annual',
+            source: o.source || 'Statute',
+            why: o.aiWhy || 'Statutory requirement'
+          }));
+          render();
+        }
+      } catch (err) {
+        console.warn('Obligations using local data:', err.message);
+      }
+    }
+    loadLiveObligations();
+
+    const STATUSES = [
+      ['all', 'All'],
+      ['ok', 'Met'],
+      ['due', 'Due soon'],
+      ['overdue', 'Overdue'],
+      ['na', 'Exempt']
+    ];
+
+    function chip(active) {
+      return `class="btn-chip ${active ? 'active' : ''}"`;
+    }
+
+    function renderFilters() {
+      document.getElementById('statusFilters').innerHTML = STATUSES.map(([k, l]) =>
+        `<button ${chip(state.status === k)} data-status="${k}">${l}</button>`).join('');
+
+      document.getElementById('tierFilters').innerHTML =
+        [['all', 'All Areas'], ...B.tierList().map(t => [t, t])].map(([k, l]) =>
+        `<button ${chip(state.tier === k)} data-tier="${k}">${l}</button>`).join('');
+
+      document.querySelectorAll('[data-status]').forEach(b => {
+        b.onclick = () => { state.status = b.dataset.status; render(); };
+      });
+      document.querySelectorAll('[data-tier]').forEach(b => {
+        b.onclick = () => { state.tier = b.dataset.tier; render(); };
+      });
+    }
+
+    const searchInput = document.getElementById('tableSearch');
+    searchInput.addEventListener('input', (e) => {
+      state.query = e.target.value.toLowerCase().trim();
+      render();
+    });
+
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      UI.toast('Exporting 16 statutory duties to CSV...', 'success');
+      setTimeout(() => {
+        const csvContent = 'data:text/csv;charset=utf-8,ID,Title,Area,Jurisdiction,Owner,NextDue,Status\n' +
+          B.obligations.map(o => `"${o.id}","${o.title}","${o.tier}","${o.jurisdiction}","${o.owner}","${o.nextDue}","${o.status}"`).join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'ballast_obligations_register.csv');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }, 400);
+    });
+
+    function getAuthBadge(o) {
+      if (o.id.startsWith('OBL-001') || o.id.startsWith('OBL-002') || o.id.startsWith('OBL-003')) return '<span class="auth-badge auth-fsa">FSA</span>';
+      if (o.id.startsWith('OBL-005') || o.id.startsWith('OBL-006')) return '<span class="auth-badge auth-hse">HSE</span>';
+      if (o.id.startsWith('OBL-008')) return '<span class="auth-badge auth-gas">GAS SAFE</span>';
+      if (o.id.startsWith('OBL-011')) return '<span class="auth-badge auth-mcc">MCC COUNCIL</span>';
+      return '<span class="auth-badge auth-ico">STATUTE</span>';
+    }
+
+    // Reassess modal
+    document.getElementById('reassessBtn').addEventListener('click', () => {
+      const modal = UI.modal(
+        'Statutory Cross-Evaluation Engine',
+        `<div class="space-y-4 font-sans">
+          <p class="text-xs text-slate-600 leading-relaxed">Cross-referencing 2 operational locations, 18 registered personnel, and culinary activities against verified UK statutory databases.</p>
+          <div class="p-3 bg-slate-50 rounded-xl border hairline space-y-2 text-xs font-mono">
+            <div class="flex items-center justify-between text-slate-700"><span>[OK] Food Standards Agency (HACCP Code)</span><span class="text-emerald-600 font-bold">VERIFIED</span></div>
+            <div class="flex items-center justify-between text-slate-700"><span>[OK] Health and Safety at Work Act 1974</span><span class="text-emerald-600 font-bold">VERIFIED</span></div>
+            <div class="flex items-center justify-between text-slate-700"><span>[OK] Manchester Council Premises Licensing</span><span class="text-emerald-600 font-bold">VERIFIED</span></div>
+            <div class="flex items-center justify-between text-slate-700"><span>[OK] Gas Safety (Installation &amp; Use)</span><span class="text-emerald-600 font-bold">VERIFIED</span></div>
+          </div>
+          <div class="text-xs text-sky-700 font-bold font-mono">Status: 16 statutory duties loaded. Zero legal drift detected.</div>
+        </div>`,
+        `<button class="btn btn-ghost btn-sm" data-close>Close</button>
+         <button class="btn btn-primary btn-sm" id="confirmAssess">Sync Engine</button>`
+      );
+      document.getElementById('confirmAssess').onclick = () => {
+        modal.close();
+        UI.toast('Obligations engine recalculated', 'success');
+      };
+    });
+
+    function render() {
+      renderFilters();
+      let rows = B.obligations.filter(o => {
+        const matchStatus = state.status === 'all' || o.status === state.status;
+        const matchTier = state.tier === 'all' || o.tier === state.tier;
+        const matchQuery = !state.query ||
+          o.title.toLowerCase().includes(state.query) ||
+          o.id.toLowerCase().includes(state.query) ||
+          o.jurisdiction.toLowerCase().includes(state.query) ||
+          o.owner.toLowerCase().includes(state.query);
+        return matchStatus && matchTier && matchQuery;
+      });
+
+      document.getElementById('resultCount').textContent = `${rows.length} of ${B.obligations.length} shown`;
+
+      document.getElementById('rows').innerHTML = rows.map(o => `
+        <tr class="clickable group" onclick="location.href='obligation-detail.html?id=${o.id}'">
+          <td>
+            <div class="font-semibold text-ink group-hover:text-sky-700 transition">${o.title}</div>
+            <div class="text-[11px] font-mono text-slate-500 flex items-center gap-2 mt-0.5">
+              <span class="bg-slate-100 px-1 rounded text-slate-600 font-semibold">${o.id}</span>
+              <span>·</span>
+              ${getAuthBadge(o)}
+            </div>
+          </td>
+          <td>${UI.tierTag(o.tier)}</td>
+          <td class="text-slate-600 font-mono text-xs">${o.jurisdiction}</td>
+          <td class="text-slate-700 text-xs font-semibold">${o.owner}</td>
+          <td class="font-mono text-xs ${o.status==='overdue'?'text-rose-600 font-bold':'text-slate-700 font-medium'}">${UI.fmtDate(o.nextDue)}</td>
+          <td class="text-right">${UI.statusPill(o.status)}</td>
+        </tr>`).join('') || `<tr><td colspan="6" class="text-center font-mono text-xs text-slate-400 py-12">No obligations match current criteria.</td></tr>`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

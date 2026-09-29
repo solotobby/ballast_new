@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statutory Reports & Packs · Ballast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+</head>
+<body data-page="reports">
+  <main class="content">
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-slate-500 uppercase tracking-wider mb-1.5">
+          <span class="text-sky-700 font-bold">The Copper Kettle</span>
+          <span class="text-slate-300">/</span>
+          <span>Regulatory Filings &amp; Inspection Packs</span>
+          <span class="text-slate-300">/</span>
+          <span class="text-slate-600 font-medium">Statutory Reports</span>
+        </div>
+        <h1 class="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">Reports &amp; Submissions</h1>
+        <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          Pre-compiled inspection readiness packs, local authority filings, and EHO dossiers generated deterministically from your verified records.
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-sm" id="gen">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Generate Custom Pack
+      </button>
+    </div>
+
+    <!-- Summary KPI cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5" id="summary"></div>
+
+    <!-- Reports Data Table -->
+    <div class="card overflow-hidden shadow-xs">
+      <div class="px-5 py-3.5 border-b hairline bg-slate-50/70 flex items-center justify-between">
+        <div class="font-display font-bold text-xs uppercase tracking-wider text-slate-700">Official Reporting Schedule &amp; Deliverables</div>
+        <span class="font-mono text-[10.5px] text-slate-400">Target Authorities: Council, HSE, Insurers</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="dtable">
+          <thead>
+            <tr>
+              <th class="w-2/5">Report Document &amp; Scope</th>
+              <th>Recipient Authority</th>
+              <th>Audit Period</th>
+              <th>Filing Deadline</th>
+              <th>Status</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/layout.js?v=8"></script>
+  <script src="../assets/js/api.js"></script>
+  <script>
+    const B = window.BALLAST;
+    const reports = [...B.reports];
+
+    function summary(){
+      const s = { due:0, draft:0, submitted:0, overdue:0 };
+      reports.forEach(r=>s[r.rptStatus]++);
+      const cards = [
+        ['Action Due', s.due, 'Pending submission', '#B45309', 'border-l-amber-500'],
+        ['Draft In Progress', s.draft, 'Auto-filling from evidence', '#0284C7', 'border-l-sky-500'],
+        ['Overdue Filings', s.overdue, 'Urgent regulatory breach', '#B91C1C', 'border-l-rose-500'],
+        ['Submitted & Filed', s.submitted, 'Acknowledged by authority', '#047857', 'border-l-emerald-500']
+      ];
+      document.getElementById('summary').innerHTML = cards.map(([l,v,sub,c,borderCls])=>`
+        <div class="card p-4 border-l-4 ${borderCls}">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-mono text-xs text-slate-500 font-semibold">${l}</span>
+            <span class="dot" style="background:${c}"></span>
+          </div>
+          <div class="font-display text-3xl font-extrabold tnum tracking-tight" style="color:${c}">${v}</div>
+          <div class="text-[11px] font-mono text-slate-400 mt-1">${sub}</div>
+        </div>`).join('');
+    }
+
+    function actionFor(r){
+      if(r.rptStatus==='submitted') return `<button class="btn btn-ghost btn-sm" data-view="${r.id}">View Dossier</button>`;
+      if(r.rptStatus==='draft') return `<button class="btn btn-primary btn-sm" data-submit="${r.id}">Submit to Authority</button>`;
+      return `<button class="btn btn-primary btn-sm" data-generate="${r.id}">Compile Pack</button>`;
+    }
+
+    function render(){
+      summary();
+      document.getElementById('rows').innerHTML = reports.map(r=>{
+        const obl = B.oblById(r.obl);
+        return `
+          <tr class="group">
+            <td>
+              <div class="font-semibold text-ink group-hover:text-sky-700 transition leading-snug">${r.title}</div>
+              <div class="text-[11px] font-mono text-slate-500 mt-0.5">${obl ? obl.title : r.obl}</div>
+            </td>
+            <td><span class="auth-badge auth-mcc">${r.recipient}</span></td>
+            <td class="font-mono text-xs text-slate-600">${r.period}</td>
+            <td class="font-mono text-xs font-bold ${r.rptStatus==='overdue'?'text-rose-600':'text-slate-700'}">${UI.fmtDate(r.due)}</td>
+            <td>${UI.rptPill(r.rptStatus)}</td>
+            <td class="text-right">${actionFor(r)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.querySelectorAll('[data-view]').forEach(b=> b.onclick=()=> UI.toast(`Opened ${b.dataset.view} preview dossier`, 'info'));
+      document.querySelectorAll('[data-submit]').forEach(b=> b.onclick=()=> {
+        const item = reports.find(r=>r.id===b.dataset.submit);
+        if(item) item.rptStatus = 'submitted';
+        render();
+        UI.toast('Report successfully submitted to authority register', 'success');
+      });
+      document.querySelectorAll('[data-generate]').forEach(b=> b.onclick=()=> {
+        const item = reports.find(r=>r.id===b.dataset.generate);
+        if(item) item.rptStatus = 'draft';
+        render();
+        UI.toast('Compiled report dossier from local vault evidence', 'success');
+      });
+    }
+    render();
+
+    document.getElementById('gen').onclick = ()=>{
+      UI.toast('Compiling bespoke EHO inspection dossier...', 'info');
+    };
+  </script>
+</body>
+</html>

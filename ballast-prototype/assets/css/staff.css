@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Ballast — STAFF app shell. Mobile-first: sticky top bar + fixed bottom tab
+   bar. On large screens it expands to a left sidebar + wide content.
+   Sits on top of styles.css (which supplies .card/.btn/.pill/.field etc.).
+   ========================================================================== */
+
+:root { --staff-side: 236px; --staff-top: 56px; }
+
+body.staff { background: #F4F7FA; padding-bottom: 0; }
+
+/* ---- top bar (all breakpoints) ---- */
+.staff-topbar {
+  position: sticky; top: 0; z-index: 30;
+  height: var(--staff-top);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 1px solid #E7ECF2;
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ---- main content ---- */
+.staff-main {
+  padding: 18px 16px calc(84px + env(safe-area-inset-bottom, 0px));
+  max-width: 640px; margin: 0 auto;
+}
+
+/* ---- bottom tab bar (mobile) ---- */
+.staff-bottomnav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-top: 1px solid #E7ECF2;
+  display: flex; justify-content: space-around;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+.staff-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0; text-decoration: none; color: #7B8797; font-size: 11px; font-weight: 500;
+  position: relative;
+}
+.staff-tab svg { width: 22px; height: 22px; stroke-width: 1.9; }
+.staff-tab.active { color: #1F7DB4; }
+.staff-tab .tab-badge {
+  position: absolute; top: -1px; right: 22%;
+  min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px;
+  background: #C0503B; color: #fff; font-size: 9px; font-weight: 700;
+  display: grid; place-items: center;
+}
+
+/* ---- desktop sidebar ---- */
+.staff-sidebar { display: none; }
+
+@media (min-width: 1024px) {
+  .staff-bottomnav { display: none; }
+  .staff-sidebar {
+    display: flex; flex-direction: column;
+    position: fixed; inset: 0 auto 0 0; width: var(--staff-side);
+    background: #fff; border-right: 1px solid #E7ECF2; z-index: 40;
+  }
+  .staff-side-link {
+    display: flex; align-items: center; gap: 11px;
+    margin: 2px 12px; padding: 10px 12px; border-radius: 10px;
+    color: #55606E; font-size: 14.5px; font-weight: 500; text-decoration: none;
+    transition: background .12s, color .12s;
+  }
+  .staff-side-link svg { width: 19px; height: 19px; stroke-width: 1.9; }
+  .staff-side-link:hover { background: #F1F5F9; color: #111418; }
+  .staff-side-link.active { background: #EAF5FC; color: #12384F; }
+  .staff-side-link.active svg { color: #1F7DB4; }
+  .staff-side-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 999px; background: #C0503B; color: #fff; font-size: 10px; font-weight: 700;
+    display: grid; place-items: center; }
+
+  .staff-topbar { left: var(--staff-side); }
+  .staff-main {
+    margin-left: var(--staff-side); max-width: 900px;
+    padding: 26px 32px 48px; margin-right: auto;
+  }
+  .grid-desktop-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+}
+
+/* ---- staff-flavoured helpers ---- */
+.tap { transition: transform .08s ease, background .12s; }
+.tap:active { transform: scale(.985); }
+
+.big-btn { padding: 14px 18px; font-size: 15px; border-radius: 13px; }
+
+.quick-action {
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  padding: 14px; border-radius: 14px; background: #fff; border: 1px solid #E7ECF2;
+  text-decoration: none; color: #111418;
+}
+.quick-action .qa-ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; }
+
+.focus-card {
+  border-radius: 18px; padding: 20px; color: #fff; position: relative; overflow: hidden;
+  background: linear-gradient(145deg, #22648C 0%, #0E1319 100%);
+}
+.focus-card::after {
+  content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px;
+  border-radius: 50%; background: radial-gradient(circle, rgba(127,203,240,.55), transparent 70%);
+}
+
+.task-check {
+  width: 26px; height: 26px; border-radius: 8px; border: 2px solid #CBD5E1;
+  display: grid; place-items: center; flex: none; cursor: pointer; background:#fff;
+  transition: background .12s, border-color .12s;
+}
+.task-check.done { background: #3E9E7A; border-color: #3E9E7A; color: #fff; }
+
+.seg { display: inline-flex; background: #EEF2F6; border-radius: 11px; padding: 3px; }
+.seg button { border: 0; background: transparent; font-size: 13px; font-weight: 600; color: #5A6675;
+  padding: 6px 14px; border-radius: 8px; cursor: pointer; }
+.seg button.active { background: #fff; color: #111418; box-shadow: 0 1px 2px rgba(16,24,40,.08); }
+
+.progress-track { height: 8px; border-radius: 999px; background: #E7ECF2; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#7FCBF0,#1F7DB4); transition: width .4s; }
+
+.lesson-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #EEF2F6; }
+.lesson-row:last-child { border-bottom: 0; }
+.lesson-num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-size: 13px; font-weight: 600; background: #EEF2F6; color: #64748B; }
+.lesson-row.done .lesson-num { background: #E7F3EE; color: #2C7358; }
+
+.notif { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #EEF2F6; }
+.notif:last-child { border-bottom: 0; }
+.notif.unread { background: #F5FBFE; }
+.notif-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+
+@media (prefers-reduced-motion: reduce) { .tap, .progress-fill { transition: none; } }

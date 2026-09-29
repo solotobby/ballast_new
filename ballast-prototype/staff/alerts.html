@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Alerts · Ballast for staff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="../assets/css/styles.css?v=8" />
+  <link rel="stylesheet" href="../assets/css/staff.css" />
+</head>
+<body class="staff" data-staff-page="alerts" data-staff-title="Alerts">
+  <main class="staff-main">
+    <div class="flex items-center justify-between mb-4">
+      <div class="seg" id="seg">
+        <button data-f="all" class="active">All</button>
+        <button data-f="unread">Unread</button>
+      </div>
+      <button class="btn btn-quiet btn-sm" id="markAll">Mark all read</button>
+    </div>
+
+    <div class="card overflow-hidden" id="list"></div>
+  </main>
+
+  <script src="../assets/js/ui.js"></script>
+  <script src="../assets/js/staff-data.js"></script>
+  <script src="../assets/js/staff-layout.js?v=8"></script>
+  <script>
+    const S = window.STAFF;
+    let notifs = S.notifications.map(n=>({...n}));
+    let filter = 'all';
+
+    const meta = {
+      training:['learn','#2C7358','#E7F3EE'], task:['alert','#8A6412','#FBF1DC'],
+      message:['message','#155E88','#E4F2FB'], evidence:['file','#8F3527','#F8E7E2'],
+      shift:['calendar','#155E88','#E4F2FB'], system:['settings','#5A6675','#EEF2F6']
+    };
+
+    function render(){
+      const list = notifs.filter(n=> filter==='all' || n.unread);
+      document.getElementById('list').innerHTML = list.map(n=>{
+        const [ic,c,bg]=meta[n.kind];
+        return `<div class="notif ${n.unread?'unread':''} tap" data-id="${n.id}" ${n.link?`data-link="${n.link}"`:''}>
+          <span class="notif-ic" style="background:${bg};color:${c}">${UI.icon(ic,'w-5 h-5')}</span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2"><div class="text-[15px] font-semibold text-ink leading-snug">${n.title}</div>
+              ${n.unread?'<span class="w-2 h-2 rounded-full bg-brand-500 flex-none ml-auto"></span>':''}</div>
+            <div class="text-sm text-grey-600 leading-snug mt-0.5">${n.body}</div>
+            <div class="text-xs text-grey-400 mt-1">${n.ts}</div>
+          </div>
+        </div>`;
+      }).join('') || `<div class="p-10 text-center text-grey-500">
+        ${UI.icon('checkCircle','w-8 h-8 mx-auto mb-2 text-ok')}<div class="font-medium text-ink">You\u2019re all caught up</div>
+        <div class="text-sm">No unread alerts.</div></div>`;
+      document.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>{
+        const n = notifs.find(x=>x.id===el.dataset.id); n.unread=false;
+        if(el.dataset.link) location.href = el.dataset.link; else render();
+      });
+    }
+    render();
+
+    document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{
+      filter=b.dataset.f;
+      document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('active', x===b));
+      render();
+    });
+    document.getElementById('markAll').onclick = ()=>{ notifs.forEach(n=>n.unread=false); render(); UI.toast('All alerts marked read'); };
+  </script>
+</body>
+</html>
